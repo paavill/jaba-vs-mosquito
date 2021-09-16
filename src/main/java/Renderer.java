@@ -3,7 +3,9 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
+import java.io.*;
 import java.nio.*;
+import java.util.Scanner;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -19,7 +21,11 @@ public class Renderer {
         System.out.println("Привет LWJGL " + Version.getVersion() + "!");
 
         init();
-        loop();
+        try {
+            loop();
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }
 
         glfwFreeCallbacks(window);
         glfwDestroyWindow(window);
@@ -70,58 +76,15 @@ public class Renderer {
         glfwSwapInterval(1);
     }
 
-    private void loop() {
+    private void loop() throws IOException {
         GL.createCapabilities();
 
         String shadersCompileExceptionsMessages = "";
         int logMessage[] = new int[1];
-        CharSequence sourceVertexShader = new CharSequence() {
-            @Override
-            public int length() {
-                return 0;
-            }
 
-            @Override
-            public char charAt(int index) {
-                return 0;
-            }
+        CharSequence sourceVertexShader = graphicResourceLoader.loadShader("src/main/java/VERTEX_SHADER.glsl");
+        CharSequence sourceFragmentShader = graphicResourceLoader.loadShader("src/main/java/FRAGMENT_SHADER.glsl");
 
-            @Override
-            public CharSequence subSequence(int start, int end) {
-                return null;
-            }
-        };
-        CharSequence sourceFragmentShader = new CharSequence() {
-            @Override
-            public int length() {
-                return 0;
-            }
-
-            @Override
-            public char charAt(int index) {
-                return 0;
-            }
-
-            @Override
-            public CharSequence subSequence(int start, int end) {
-                return null;
-            }
-        };
-
-        sourceVertexShader = "#version 330 core\n" +
-                "layout (location = 0) in vec3 aPos;\n" +
-                " \n" +
-                "void main()\n" +
-                "{\n" +
-                "    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n" +
-                "}";
-
-        sourceFragmentShader = "#version 330 core\n" +
-                "out vec4 FragColor;\n" +
-                "void main()\n"+
-                "{\n" +
-                "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"+
-                "}\n\0";
 
         int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, sourceVertexShader);
@@ -145,14 +108,12 @@ public class Renderer {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        glUseProgram(shederProgram);
-
         System.out.println(shadersCompileExceptionsMessages);
 
         float vertices[] = {
-                -0.5f, -0.6f, 0.0f, // левая вершина
-                0.5f, -0.5f, 0.0f, // правая вершина
-                0.4f,  0.5f, 0.0f  // верхняя вершина
+                -0.5f, -0.5f, 0.0f, // левая вершина
+                0.5f, -0.5f, 0.2f, // правая вершина
+                0.0f,  0.5f, 0.5f  // верхняя вершина
         };
 
         int VBO[] = new int[1];
@@ -178,9 +139,14 @@ public class Renderer {
                     0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+            glUseProgram(shederProgram);
             glBindVertexArray(VAO[0]); // поскольку у нас есть только один VAO, то нет необходимости связывать его каждый раз (но мы сделаем это, чтобы всё было немного организованнее)
+
             glDrawArrays(GL_TRIANGLES, 0, 3);
             glfwSwapBuffers(window);
+
+            glUseProgram(0);
+            glBindVertexArray(0);
 
             glfwPollEvents();
         }
