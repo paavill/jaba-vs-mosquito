@@ -5,7 +5,6 @@ import org.lwjgl.system.*;
 
 import java.io.*;
 import java.nio.*;
-import java.util.Scanner;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -16,6 +15,7 @@ import static org.lwjgl.system.MemoryUtil.*;
 public class Renderer {
 
     private long window;
+    private static int FRAME_TIME_MS = 1000/60;
 
     public void run() {
         System.out.println("Привет LWJGL " + Version.getVersion() + "!");
@@ -23,7 +23,7 @@ public class Renderer {
         init();
         try {
             loop();
-        }catch (IOException e){
+        }catch (IOException | InterruptedException e){
             System.out.println(e.getMessage());
         }
 
@@ -76,43 +76,20 @@ public class Renderer {
         glfwSwapInterval(1);
     }
 
-    private void loop() throws IOException {
+    private void loop() throws IOException, InterruptedException {
         GL.createCapabilities();
 
         String shadersCompileExceptionsMessages = "";
-        int logMessage[] = new int[1];
 
-        CharSequence sourceVertexShader = graphicResourceLoader.loadShader("src/main/java/VERTEX_SHADER.glsl");
-        CharSequence sourceFragmentShader = graphicResourceLoader.loadShader("src/main/java/FRAGMENT_SHADER.glsl");
+        int shaderProgram = GraphicResourceLoader.linkShaderProgram("src/main/java/VERTEX_SHADER.glsl","src/main/java/FRAGMENT_SHADER.glsl");
 
-
-        int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, sourceVertexShader);
-        glCompileShader(vertexShader);
-
-        shadersCompileExceptionsMessages += "Vertex shader compiling: " + glGetShaderInfoLog(vertexShader) + "\n";
-
-        int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, sourceFragmentShader);
-        glCompileShader(fragmentShader);
-
-        shadersCompileExceptionsMessages += "Fragment shader compiling: " + glGetShaderInfoLog(fragmentShader) + "\n";
-
-        int shederProgram = glCreateProgram();
-        glAttachShader(shederProgram, vertexShader);
-        glAttachShader(shederProgram, fragmentShader);
-        glLinkProgram(shederProgram);
-
-        shadersCompileExceptionsMessages += "Shader program linking: " + glGetProgramInfoLog(shederProgram) + "\n";
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        shadersCompileExceptionsMessages += "Shader program linking: " + (glGetProgramInfoLog(shaderProgram) == "" ? "OK":"") + "\n";
 
         System.out.println(shadersCompileExceptionsMessages);
 
         float vertices[] = {
                 -0.5f, -0.5f, 0.0f, // левая вершина
-                0.5f, -0.5f, 0.2f, // правая вершина
+                0.5f, -0.5f, 0.0f, // правая вершина
                 0.0f,  0.5f, 0.5f  // верхняя вершина
         };
 
@@ -131,7 +108,11 @@ public class Renderer {
         glBindBuffer(GL_ARRAY_BUFFER,0);
         glBindVertexArray(0);
 
+        double start;
+        double end;
+
         while (!glfwWindowShouldClose(window)) {
+            start = glfwGetTime();
             glClearColor(
                     (float) Math.abs(Math.sin(glfwGetTime())),
                     (float) Math.abs(Math.cos(glfwGetTime())),
@@ -139,7 +120,7 @@ public class Renderer {
                     0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glUseProgram(shederProgram);
+            glUseProgram(shaderProgram);
             glBindVertexArray(VAO[0]); // поскольку у нас есть только один VAO, то нет необходимости связывать его каждый раз (но мы сделаем это, чтобы всё было немного организованнее)
 
             glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -149,6 +130,11 @@ public class Renderer {
             glBindVertexArray(0);
 
             glfwPollEvents();
+            end = glfwGetTime();
+            double delta = start + FRAME_TIME_MS - end;
+            if(delta > 0){
+                Thread.sleep(Math.round(delta));
+            }
         }
     }
 }
