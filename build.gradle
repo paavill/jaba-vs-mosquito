@@ -13,6 +13,8 @@ repositories {
 }
 
 dependencies {
+    implementation group: 'org.joml', name: 'joml', version: '1.9.2'
+
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
 
     implementation "org.lwjgl:lwjgl"

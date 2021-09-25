@@ -1,3 +1,5 @@
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
@@ -8,6 +10,7 @@ import java.nio.*;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
@@ -88,30 +91,50 @@ public class Renderer {
         System.out.println(shadersCompileExceptionsMessages);
 
         float vertices[] = {
-                -0.5f, -0.5f, 0.0f, // левая вершина
-                0.5f, -0.5f, 0.0f, // правая вершина
-                0.0f,  0.5f, 0.5f  // верхняя вершина
+                -0.5f, -0.5f, 0.5f, // левая нижняя вершина
+                0.5f, -0.5f, 0.5f, // правая нижняя вершина
+                0.5f,  -0.5f, -0.5f,  // левая верхняя вершина
+                -0.5f, -0.5f, -0.5f, // правая верхняя вершина
+                -0.5f, 0.5f, 0.5f, // левая нижняя вершина
+                0.5f, 0.5f, 0.5f, // правая нижняя вершина
+                0.5f,  0.5f, -0.5f,  // левая верхняя вершина
+                -0.5f, 0.5f, -0.5f // левая верхняя вершина
         };
 
-        int VBO[] = new int[1];
-        int VAO[] = new int[1];
-        glGenBuffers(VBO);
-        glGenVertexArrays(VAO);
+        int indexes[] = {
+                0,1,4,
+                4,5,1,
+                1,5,2,
+                2,6,5,
+                6,2,7,
+                7,2,3,
+                3,7,4,
+                4,3,0,
+                0,3,1,
+                1,2,3,
+                4,7,5,
+                5,6,7
+        };
 
-        glBindVertexArray(VAO[0]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-        glBufferData(GL_ARRAY_BUFFER,vertices,GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0,3,GL_FLOAT,false,0, 0);
-        glEnableVertexAttribArray(0);
-
-        glBindBuffer(GL_ARRAY_BUFFER,0);
-        glBindVertexArray(0);
+        Block bl = new Block(new Vector3f(0,0,0), vertices, indexes);
+        int VAO = bl.createVAO();
 
         double start;
         double end;
 
+        Matrix4f model = new Matrix4f();
+        model.rotate((float)Math.toRadians(10), new Vector3f(1, 0 , 0));
+
+        Matrix4f view = new Matrix4f();
+        view.translate(new Vector3f(0,0, -3.f));
+
+        Matrix4f projection = new Matrix4f();
+        projection.perspective((float) Math.toRadians(45), 1024.f/768.f, 0.1f,100.f);
+        FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+        int atrPos;
+        double delta = 0;
         while (!glfwWindowShouldClose(window)) {
+
             start = glfwGetTime();
             glClearColor(
                     (float) Math.abs(Math.sin(glfwGetTime())),
@@ -121,9 +144,31 @@ public class Renderer {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram);
-            glBindVertexArray(VAO[0]); // поскольку у нас есть только один VAO, то нет необходимости связывать его каждый раз (но мы сделаем это, чтобы всё было немного организованнее)
 
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            model.rotate((float)Math.toRadians(delta/50), new Vector3f(0, 1 , 0));
+            model.rotate((float)Math.toRadians(delta/50), new Vector3f(1, 0 , 0));
+            model.rotate((float)Math.toRadians(delta/50), new Vector3f(0, 0 , 1));
+            fb.clear();
+            atrPos = glGetUniformLocation(shaderProgram, "model");
+            fb = BufferUtils.createFloatBuffer(16);
+            glUniformMatrix4fv(atrPos, false, model.get(fb));
+
+            fb.clear();
+            fb = BufferUtils.createFloatBuffer(16);
+            atrPos = glGetUniformLocation(shaderProgram, "view");
+            glUniformMatrix4fv(atrPos, false, view.get(fb));
+
+            fb.clear();
+            fb = BufferUtils.createFloatBuffer(16);
+            atrPos = glGetUniformLocation(shaderProgram, "projection");
+            glUniformMatrix4fv(atrPos, false, projection.get(fb));
+
+            glBindVertexArray(VAO);
+
+            glDrawElements(GL_TRIANGLES, indexes.length, GL_UNSIGNED_INT, 0L);
+
+            //glDrawArrays(GL_TRIANGLES, 0, 3);
+
             glfwSwapBuffers(window);
 
             glUseProgram(0);
@@ -131,7 +176,7 @@ public class Renderer {
 
             glfwPollEvents();
             end = glfwGetTime();
-            double delta = start + FRAME_TIME_MS - end;
+            delta = start + FRAME_TIME_MS - end;
             if(delta > 0){
                 Thread.sleep(Math.round(delta));
             }
