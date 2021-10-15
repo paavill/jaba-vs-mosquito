@@ -52,11 +52,7 @@ public class Renderer {
             throw new RuntimeException("Не удалось создать окно!");
         }
         //вынести лямбу в InputHandler
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                glfwSetWindowShouldClose(window, true);
-            }
-        });
+        glfwSetKeyCallback(window, InputHandler::keyCallBack);
 
         glfwSetFramebufferSizeCallback(window, InputHandler::resizeWindow);
 
@@ -116,38 +112,36 @@ public class Renderer {
                 5,6,7
         };
 
+
+
         Block bl = new Block(new Vector3f(0,0,0), vertices, indexes);
         int VAO = bl.createVAO();
 
         double start;
         double end;
+        double delta = 0;
+
+        Camera.defaultInit();
 
         Matrix4f model = new Matrix4f();
-        model.rotate((float)Math.toRadians(10), new Vector3f(1, 0 , 0));
-
-        Matrix4f view = new Matrix4f();
-        view.translate(new Vector3f(0,0, -3.f));
-
         Matrix4f projection = new Matrix4f();
         projection.perspective((float) Math.toRadians(45), 1024.f/768.f, 0.1f,100.f);
+
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
-        double delta = 0;
+
         while (!glfwWindowShouldClose(window)) {
 
             start = glfwGetTime();
             glClearColor(
-                    (float) Math.abs(Math.sin(glfwGetTime())),
-                    (float) Math.abs(Math.cos(glfwGetTime())),
-                    (float) Math.abs(Math.sin(2.0 * glfwGetTime())),
+                    (float) Math.abs(Math.sin(glfwGetTime()/10)),
+                    (float) Math.abs(Math.cos(glfwGetTime()/10)),
+                    (float) Math.abs(Math.sin(glfwGetTime()/10)),
                     0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram);
 
-            model.rotate((float)Math.toRadians(delta/50), new Vector3f(0, 1 , 0));
-            model.rotate((float)Math.toRadians(delta/50), new Vector3f(1, 0 , 0));
-            model.rotate((float)Math.toRadians(delta/50), new Vector3f(0, 0 , 1));
             fb.clear();
             atrPos = glGetUniformLocation(shaderProgram, "model");
             fb = BufferUtils.createFloatBuffer(16);
@@ -156,7 +150,10 @@ public class Renderer {
             fb.clear();
             fb = BufferUtils.createFloatBuffer(16);
             atrPos = glGetUniformLocation(shaderProgram, "view");
-            glUniformMatrix4fv(atrPos, false, view.get(fb));
+
+            //Camera.moveAbsolute(new Vector3f((float) Math.sin(start)*5, 0, (float) Math.cos(start)*5));
+
+            glUniformMatrix4fv(atrPos, false, Camera.getLookAt().get(fb));
 
             fb.clear();
             fb = BufferUtils.createFloatBuffer(16);
