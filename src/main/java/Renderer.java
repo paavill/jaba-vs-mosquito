@@ -4,6 +4,7 @@ import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
+import org.lwjgl.system.windows.WINDOWPLACEMENT;
 
 import java.io.*;
 import java.nio.*;
@@ -51,10 +52,12 @@ public class Renderer {
         if (window == NULL) {
             throw new RuntimeException("Не удалось создать окно!");
         }
-        //вынести лямбу в InputHandler
+
         glfwSetKeyCallback(window, InputHandler::keyCallBack);
 
         glfwSetFramebufferSizeCallback(window, InputHandler::resizeWindow);
+
+        glfwSetCursorPosCallback(window, InputHandler::mouseCallBack);
 
         try (MemoryStack stack = stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1);
@@ -73,6 +76,7 @@ public class Renderer {
 
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1);
+        //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     private void loop() throws IOException, InterruptedException {
@@ -121,7 +125,8 @@ public class Renderer {
         double end;
         double delta = 0;
 
-        Camera.defaultInit();
+        Camera.defaultInit(window);
+        glfwSetCursorPos(window, Camera.lastX,Camera.lastY);
 
         Matrix4f model = new Matrix4f();
         Matrix4f projection = new Matrix4f();
@@ -131,7 +136,7 @@ public class Renderer {
         int atrPos;
 
         while (!glfwWindowShouldClose(window)) {
-
+            InputHandler.moveCamera(window);
             start = glfwGetTime();
             glClearColor(
                     (float) Math.abs(Math.sin(glfwGetTime()/10)),
