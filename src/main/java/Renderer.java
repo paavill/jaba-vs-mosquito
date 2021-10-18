@@ -8,6 +8,9 @@ import org.lwjgl.system.windows.WINDOWPLACEMENT;
 
 import java.io.*;
 import java.nio.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -19,7 +22,7 @@ import static org.lwjgl.system.MemoryUtil.*;
 public class Renderer {
 
     private long window;
-    private static int FRAME_TIME_MS = 1000/60;
+    private static int FRAME_TIME_MS = 1000 / 60;
 
     public void run() {
         System.out.println("Привет LWJGL " + Version.getVersion() + "!");
@@ -27,7 +30,7 @@ public class Renderer {
         init();
         try {
             loop();
-        }catch (IOException | InterruptedException e){
+        } catch (IOException | InterruptedException e) {
             System.out.println(e.getMessage());
         }
 
@@ -76,111 +79,91 @@ public class Renderer {
 
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1);
-        //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     private void loop() throws IOException, InterruptedException {
         GL.createCapabilities();
+        glEnable(GL_DEPTH_TEST);
 
         String shadersCompileExceptionsMessages = "";
 
-        int shaderProgram = GraphicResourceLoader.linkShaderProgram("src/main/java/VERTEX_SHADER.glsl","src/main/java/FRAGMENT_SHADER.glsl");
+        int shaderProgram = GraphicResourceLoader.linkShaderProgram("src/main/java/VERTEX_SHADER.glsl", "src/main/java/FRAGMENT_SHADER.glsl");
 
-        shadersCompileExceptionsMessages += "Shader program linking: " + (glGetProgramInfoLog(shaderProgram) == "" ? "OK":"") + "\n";
+        shadersCompileExceptionsMessages += "Shader program linking: " + (glGetProgramInfoLog(shaderProgram) == "" ? "OK" : "") + "\n";
 
         System.out.println(shadersCompileExceptionsMessages);
 
-        float vertices[] = {
-                -0.5f, -0.5f, 0.5f, // левая нижняя вершина
-                0.5f, -0.5f, 0.5f, // правая нижняя вершина
-                0.5f,  -0.5f, -0.5f,  // левая верхняя вершина
-                -0.5f, -0.5f, -0.5f, // правая верхняя вершина
-                -0.5f, 0.5f, 0.5f, // левая нижняя вершина
-                0.5f, 0.5f, 0.5f, // правая нижняя вершина
-                0.5f,  0.5f, -0.5f,  // левая верхняя вершина
-                -0.5f, 0.5f, -0.5f // левая верхняя вершина
-        };
+        //  Arrays.copyOfRange()
+        IntBuffer width = BufferUtils.createIntBuffer(1);
+        IntBuffer height = BufferUtils.createIntBuffer(1);
+        glfwGetWindowSize(window, width, height);
 
-        int indexes[] = {
-                0,1,4,
-                4,5,1,
-                1,5,2,
-                2,6,5,
-                6,2,7,
-                7,2,3,
-                3,7,4,
-                4,3,0,
-                0,3,1,
-                1,2,3,
-                4,7,5,
-                5,6,7
-        };
+        Camera camera = new Camera(new Vector3f(0f, 0f, 3.f),
+                                    new Tuple<Float, Float>((float) width.get() / 2, (float) height.get() / 2),
+                                    -90, 0, 0.3f, 0.3f);
+
+        InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
 
+        Collection<Chank> chanks = new ArrayList<Chank>();
+        for(int x = 0; x < 4; x++){
+            for(int z = 0; z < 4; z++){
+                chanks.add(new Chank(new Vector3f(32*x,0,32*z)));
+            }
+        }
 
-        Block bl = new Block(new Vector3f(0,0,0), vertices, indexes);
-        int VAO = bl.createVAO();
+       chanks.forEach(chank -> chank.generate());
 
         double start;
         double end;
         double delta = 0;
 
-        Camera.defaultInit(window);
-        glfwSetCursorPos(window, Camera.lastX,Camera.lastY);
-
-        Matrix4f model = new Matrix4f();
         Matrix4f projection = new Matrix4f();
-        projection.perspective((float) Math.toRadians(45), 1024.f/768.f, 0.1f,100.f);
+        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 100.f);
 
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
         while (!glfwWindowShouldClose(window)) {
-            InputHandler.moveCamera(window);
+
             start = glfwGetTime();
-            glClearColor(
-                    (float) Math.abs(Math.sin(glfwGetTime()/10)),
-                    (float) Math.abs(Math.cos(glfwGetTime()/10)),
-                    (float) Math.abs(Math.sin(glfwGetTime()/10)),
-                    0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            camera.update();
+
+            glfwSetCursorPos(window, camera.getViewCenter().x, camera.getViewCenter().y);
+            InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
             glUseProgram(shaderProgram);
 
             fb.clear();
-            atrPos = glGetUniformLocation(shaderProgram, "model");
-            fb = BufferUtils.createFloatBuffer(16);
-            glUniformMatrix4fv(atrPos, false, model.get(fb));
-
-            fb.clear();
-            fb = BufferUtils.createFloatBuffer(16);
             atrPos = glGetUniformLocation(shaderProgram, "view");
-
-            //Camera.moveAbsolute(new Vector3f((float) Math.sin(start)*5, 0, (float) Math.cos(start)*5));
-
-            glUniformMatrix4fv(atrPos, false, Camera.getLookAt().get(fb));
+            glUniformMatrix4fv(atrPos, false, camera.getLookAt().get(fb));
 
             fb.clear();
-            fb = BufferUtils.createFloatBuffer(16);
             atrPos = glGetUniformLocation(shaderProgram, "projection");
             glUniformMatrix4fv(atrPos, false, projection.get(fb));
 
-            glBindVertexArray(VAO);
+            atrPos = glGetUniformLocation(shaderProgram, "lightPos");
+            glUniform3f(atrPos, 3, 10, 3);
 
-            glDrawElements(GL_TRIANGLES, indexes.length, GL_UNSIGNED_INT, 0L);
 
-            //glDrawArrays(GL_TRIANGLES, 0, 3);
+            chanks.forEach(chank -> chank.draw(shaderProgram));
 
-            glfwSwapBuffers(window);
+            //glDrawElements(GL_TRIANGLES, indexes.length, GL_UNSIGNED_INT, 0L);
 
             glUseProgram(0);
-            glBindVertexArray(0);
+            glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+            glfwSwapBuffers(window);
 
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glfwPollEvents();
+
             end = glfwGetTime();
             delta = start + FRAME_TIME_MS - end;
-            if(delta > 0){
-                Thread.sleep(Math.round(delta));
+            if (delta > 0) {
+                //Thread.sleep(Math.round(delta));
             }
         }
     }

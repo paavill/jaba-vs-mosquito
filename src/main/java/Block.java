@@ -1,45 +1,114 @@
 import org.joml.*;
+import org.lwjgl.BufferUtils;
+
+import java.lang.Math;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
+import static org.lwjgl.opengl.GL30.*;
 
 public class Block {
     private Vector3f position;
+    private int type;
+    private Collection<Integer> nonDrowedSides = new ArrayList<Integer>();
+    private float toDraw[];
+    private FloatBuffer fb = BufferUtils.createFloatBuffer(16);;
+    private int VAO = 0;
+    private int VBO = 0;
     private float[] vert;
-    private int[] ind;
-    public Block(Vector3f position, float[] vert, int[] ind) {
+
+    public Block(Vector3f position, Mash data, Collection<Integer> nonDrowedSides, int type)
+    {
+        this.type = type;
         this.position = position;
-        this.vert = vert;
-        this.ind = ind;
+        this.nonDrowedSides = nonDrowedSides;
+        this.vert = data.vert;
+        this.toDraw = data.toDraw;
+        if(type!=0) {
+            this.createVAO();
+        }
     }
 
-    public int createVAO(){
+    public void move(Vector3f movementVector){
+        this.position.add(movementVector);
+    }
 
-        int VBO = glGenBuffers();
-        int VAO = glGenVertexArrays();
-        int EBO = glGenBuffers();
+    public void addNonDrowedSide(int number){
+        this.nonDrowedSides.add(number);
+        this.toDraw = new float[0];
+        if(type!=0) {
+            this.createVAO();
+        }
+    }
+
+    public void clearData(){
+        this.toDraw = new float[0];
+
+    }
+
+    private float[] add(float[] first, float[] second){
+        float[] newArray = Arrays.copyOf(first, first.length + second.length);
+        for(int i = first.length; i < newArray.length; i++){
+            newArray[i] = second[i - first.length];
+        }
+        return  newArray;
+    }
+
+    public int getType(){
+        return this.type;
+    }
+
+    public Vector3f getPosition(){
+        return this.position;
+    }
+
+    public void createVAO(){
+
+        for(int i = 0; i < 6; i++){
+            if(!this.nonDrowedSides.contains(i)) {
+                this.toDraw = this.add(toDraw, Arrays.copyOfRange(this.vert, i* 54, i * 54 + 54));
+            }
+        }
+
+        glDeleteVertexArrays(this.VAO);
+        glDeleteBuffers(this.VBO);
+        this.VBO = glGenBuffers();
+        this.VAO = glGenVertexArrays();
 
         glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER,this.vert,GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER,this.toDraw,GL_STATIC_DRAW);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, this.ind, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0,3,GL_FLOAT,false,0, 0);
+        glVertexAttribPointer(0,3,GL_FLOAT,false,36, 0);
         glEnableVertexAttribArray(0);
-
-
+        glVertexAttribPointer(1,3,GL_FLOAT,false,36, 12);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2,3,GL_FLOAT,false,36, 24);
+        glEnableVertexAttribArray(2);
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER,0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        return VAO;
     };
+
+    public void draw(int shaderProgram){
+        if(this.type != 0) {
+            Matrix4f model = new Matrix4f();
+            model.translate(this.position);
+            int atrPos = glGetUniformLocation(shaderProgram, "model");
+            glUniformMatrix4fv(atrPos, false, model.get(fb));
+            fb.clear();
+
+            glBindVertexArray(this.VAO);
+            glDrawArrays(GL_TRIANGLES, 0, this.toDraw.length / 9);
+            glBindVertexArray(0);
+        }
+    }
 
 }
