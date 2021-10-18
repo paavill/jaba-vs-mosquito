@@ -1,5 +1,7 @@
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 public class Chank {
@@ -15,31 +17,33 @@ public class Chank {
 
     public void generate(){
         Mash mash = new Mash();
+        FloatBuffer bf = BufferUtils.createFloatBuffer(16);
         for(int x = 0; x < this.sizeXZ; x++){
             for(int y = 0; y < this.sizeY; y++){
                 for(int z = 0; z < this.sizeXZ; z++){
-                    if(y < 10 + Math.sin(Math.toRadians(20*(this.position.x + x))) + Math.cos(Math.toRadians(20*(this.position.z + z)))){
-                        blocks[x][y][z]= new Block(new Vector3f(x,y,z),mash, new ArrayList<Integer>(), 1);
-                        if(z!=0){
-                            if(blocks[x][y][z-1].getType() != 0){
-                                blocks[x][y][z-1].addNonDrowedSide(1);
-                                blocks[x][y][z].addNonDrowedSide(0);
-                            }
-                        }
-                        if(y!=0){
-                            if(blocks[x][y - 1][z].getType() != 0) {
-                                blocks[x][y - 1][z].addNonDrowedSide(5);
-                                blocks[x][y][z].addNonDrowedSide(4);
-                            }
-                        }
-                        if(x!=0){
-                            if(blocks[x - 1][y][z].getType() != 0) {
-                                blocks[x - 1][y][z].addNonDrowedSide(3);
-                                blocks[x][y][z].addNonDrowedSide(2);
-                            }
-                        }
+                    if(y < 128){
+                        blocks[x][y][z]= new Block(new Vector3f(x,y,z), bf,mash, new ArrayList<Integer>(), 1);
                     } else {
-                        blocks[x][y][z]= new Block(new Vector3f(x,y,z),mash, new ArrayList<Integer>(), 0);
+                        blocks[x][y][z]= new Block(new Vector3f(x,y,z), bf ,mash, new ArrayList<Integer>(), 0);
+                    }
+
+                    if(z!=0){
+                        if(blocks[x][y][z-1].getType() != 0 && blocks[x][y][z].getType() != 0){
+                            blocks[x][y][z-1].addNonDrowedSide(1);
+                            blocks[x][y][z].addNonDrowedSide(0);
+                        }
+                    }
+                    if(y!=0){
+                        if(blocks[x][y - 1][z].getType() != 0 && blocks[x][y][z].getType() != 0) {
+                            blocks[x][y - 1][z].addNonDrowedSide(5);
+                            blocks[x][y][z].addNonDrowedSide(4);
+                        }
+                    }
+                    if(x!=0){
+                        if(blocks[x - 1][y][z].getType() != 0 && blocks[x][y][z].getType() != 0) {
+                            blocks[x - 1][y][z].addNonDrowedSide(3);
+                            blocks[x][y][z].addNonDrowedSide(2);
+                        }
                     }
                     blocks[x][y][z].move(this.position);
                     mash.toDraw = new float[0];

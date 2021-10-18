@@ -18,21 +18,41 @@ public class Block {
     private int type;
     private Collection<Integer> nonDrowedSides = new ArrayList<Integer>();
     private float toDraw[];
-    private FloatBuffer fb = BufferUtils.createFloatBuffer(16);;
+    private FloatBuffer fb;
     private int VAO = 0;
     private int VBO = 0;
     private float[] vert;
 
-    public Block(Vector3f position, Mash data, Collection<Integer> nonDrowedSides, int type)
+    public Block(){
+
+    }
+    public Block(Vector3f position,FloatBuffer fb, Mash data, Collection<Integer> nonDrowedSides, int type)
     {
+        this.fb = fb;
         this.type = type;
         this.position = position;
         this.nonDrowedSides = nonDrowedSides;
-        this.vert = data.vert;
-        this.toDraw = data.toDraw;
-        if(type!=0) {
+        this.vert = Mash.vert;
+        this.toDraw = Mash.toDraw;
+        if(type!=0 && this.nonDrowedSides.size() != 6) {
             this.createVAO();
+        }else {
+            glBindVertexArray(this.VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDeleteBuffers(this.VBO);
+            glBindVertexArray(0);
+            glDeleteVertexArrays(this.VAO);
         }
+    }
+
+    public void clearCollection(){
+        this.nonDrowedSides = null;
+        this.toDraw = null;
+        this.vert = null;
+    }
+
+    public  int getSize(){
+        return this.nonDrowedSides.size();
     }
 
     public void move(Vector3f movementVector){
@@ -42,14 +62,15 @@ public class Block {
     public void addNonDrowedSide(int number){
         this.nonDrowedSides.add(number);
         this.toDraw = new float[0];
-        if(type!=0) {
+        if(type!=0 && this.nonDrowedSides.size() != 6) {
             this.createVAO();
+        } else {
+            glBindVertexArray(this.VAO);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDeleteBuffers(this.VBO);
+            glBindVertexArray(0);
+            glDeleteVertexArrays(this.VAO);
         }
-    }
-
-    public void clearData(){
-        this.toDraw = new float[0];
-
     }
 
     private float[] add(float[] first, float[] second){
@@ -76,8 +97,12 @@ public class Block {
             }
         }
 
-        glDeleteVertexArrays(this.VAO);
+        glBindVertexArray(this.VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDeleteBuffers(this.VBO);
+        glBindVertexArray(0);
+        glDeleteVertexArrays(this.VAO);
+
         this.VBO = glGenBuffers();
         this.VAO = glGenVertexArrays();
 
@@ -98,7 +123,7 @@ public class Block {
     };
 
     public void draw(int shaderProgram){
-        if(this.type != 0) {
+        if(this.type != 0 && this.nonDrowedSides.size() != 6) {
             Matrix4f model = new Matrix4f();
             model.translate(this.position);
             int atrPos = glGetUniformLocation(shaderProgram, "model");

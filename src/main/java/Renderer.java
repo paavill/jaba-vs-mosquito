@@ -16,6 +16,7 @@ import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -108,8 +109,8 @@ public class Renderer {
 
 
         Collection<Chank> chanks = new ArrayList<Chank>();
-        for(int x = 0; x < 4; x++){
-            for(int z = 0; z < 4; z++){
+        for(int x = 0; x < 1; x++){
+            for(int z = 0; z < 1; z++){
                 chanks.add(new Chank(new Vector3f(32*x,0,32*z)));
             }
         }
@@ -160,6 +161,10 @@ public class Renderer {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glfwPollEvents();
 
+            double d[] = new double[1];
+            //glGetVertexAttribdv(0, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING	,d);
+
+            //System.out.println(d[0]);
             end = glfwGetTime();
             delta = start + FRAME_TIME_MS - end;
             if (delta > 0) {

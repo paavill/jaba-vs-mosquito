@@ -1,5 +1,5 @@
 public class Mash {
-    public float[] vert = {
+    public static float[] vert = new float[]{
             -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,//1 ближняя по z
             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
@@ -41,5 +41,5 @@ public class Mash {
             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
             -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
             -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f};
-    public float toDraw[] = new float[0];
+    public static float toDraw[] = new float[0];
 }
