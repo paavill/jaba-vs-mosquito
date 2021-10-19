@@ -93,7 +93,6 @@ public class Renderer {
 
         System.out.println(shadersCompileExceptionsMessages);
 
-        //  Arrays.copyOfRange()
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);
         glfwGetWindowSize(window, width, height);
@@ -105,29 +104,31 @@ public class Renderer {
         InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
 
-        Collection<Chunk> chanks = new ArrayList<Chunk>();
+        Collection<Chunk> chunks = new ArrayList<Chunk>();
         for (int x = 0; x < 10; x++) {
             for (int z = 0; z < 10; z++) {
-                chanks.add(new Chunk(new Vector3f(32 * x, 0, 32 * z)));
+                chunks.add(new Chunk(new Vector3f(64 * x, 0, 64 * z)));
             }
         }
 
-        chanks.forEach(chank -> chank.generate());
-        chanks.forEach(chank -> chank.genBlocksMash());
-        chanks.forEach(chank -> MashRenderer.addObjectToDrow(chank));
+        chunks.forEach(chunk -> chunk.generate());
+        //пофиксить чрезмерную трату памяти в следующем методе
+        chunks.forEach(chunk -> chunk.genBlocksMash());
+        System.gc();
+        chunks.forEach(chunk -> MashRenderer.addObjectToDraw(chunk));
 
         double start;
         double end;
         double delta = 0;
 
         Matrix4f projection = new Matrix4f();
-        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 200.f);
+        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 1000.f);
 
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
         MashRenderer.setShaderProgram(shaderProgram);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         while (!glfwWindowShouldClose(window)) {
 
             start = glfwGetTime();
@@ -152,8 +153,8 @@ public class Renderer {
             atrPos = glGetUniformLocation(shaderProgram, "projection");
             glUniformMatrix4fv(atrPos, false, projection.get(fb));
 
-            //atrPos = glGetUniformLocation(shaderProgram, "lightPos");
-            //glUniform3f(atrPos, 3, 10, 3);
+            atrPos = glGetUniformLocation(shaderProgram, "lightPos");
+            glUniform3f(atrPos, 3, 20, 3);
 
             MashRenderer.drawAll();
 
@@ -164,10 +165,6 @@ public class Renderer {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glfwPollEvents();
 
-            double d[] = new double[1];
-            //glGetVertexAttribdv(0, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING	,d);
-
-            //System.out.println(d[0]);
             end = glfwGetTime();
             delta = start + FRAME_TIME_MS - end;
             if (delta > 0) {

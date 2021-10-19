@@ -20,29 +20,54 @@ public class MashRenderer {
         shaderProgram = sh;
     }
 
-    public static void addObjectToDrow(Chunk object){
+    public static void addObjectToDraw(Chunk object){
         int VAO = getVAO(object);
         objectsToRender.put(object, VAO);
     }
 
+    private static float[] arrayWrapperToSimple(Float[] array){
+        float[] buff = new float[array.length];
+        for(int i = 0; i < buff.length; i++){
+            buff[i] = array[i].floatValue();
+        }
+        return  buff;
+    }
+
     private static int getVAO(Chunk object){
-        int VBO = glGenBuffers();
+        int VBO0 = glGenBuffers();
+        int VBO1 = glGenBuffers();
+        int VBO2 = glGenBuffers();
         int VAO = glGenVertexArrays();
 
-        glBindVertexArray(VAO);
-        Float[] buff = object.getMash().getVertex();
-        float[] tbuff = new float[buff.length];
-        for(int i = 0; i < buff.length; i++){
-            tbuff[i] = buff[i].floatValue();
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, tbuff, GL_STATIC_DRAW);
+        float[] wrapBuffVertex = arrayWrapperToSimple(object.getToDrawVertexBuffer());
+        float[] wrapBuffColors = arrayWrapperToSimple(object.getToDrawColorsBuffer());
+        float[] wrapBuffNormals = arrayWrapperToSimple(object.getToDrawNormalsBuffer());
 
-        glVertexAttribPointer(0,3,GL_FLOAT,false,12, 0);
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO0);
+        glBufferData(GL_ARRAY_BUFFER, wrapBuffVertex, GL_STATIC_DRAW);
+        glVertexAttribPointer(0,3,GL_FLOAT,false,0, 0);
         glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+        glBufferData(GL_ARRAY_BUFFER, wrapBuffColors, GL_STATIC_DRAW);
+        glVertexAttribPointer(1,3,GL_FLOAT,false,0, 0);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+        glBufferData(GL_ARRAY_BUFFER, wrapBuffNormals, GL_STATIC_DRAW);
+        glVertexAttribPointer(2,3,GL_FLOAT,false,0, 0);
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER,0);
+        wrapBuffVertex = null;
+        wrapBuffColors = null;
+        wrapBuffNormals = null;
         return VAO;
     }
 
@@ -60,7 +85,7 @@ public class MashRenderer {
         glUniformMatrix4fv(atrPos, false, model.get(fb));
 
         glBindVertexArray(VAO);
-        int count = obj.getMash().getVertexCount();
+        int count = obj.getVertexCount();
         glDrawArrays(GL_TRIANGLES, 0, count);
         glBindVertexArray(0);
     }

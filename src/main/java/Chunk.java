@@ -7,12 +7,153 @@ import java.util.Arrays;
 import java.util.Collection;
 
 public class Chunk {
+    //сделать загрузку из файла
+    //и вообще инициализация должна быть не здесь (абстракции...)
+
+    static Float[] blockVertex = new Float[]{
+            -0.5f, -0.5f, -0.5f, //1 ближняя по z
+            0.5f, -0.5f, -0.5f,
+            0.5f, 0.5f, -0.5f,
+            0.5f, 0.5f, -0.5f,
+            -0.5f, 0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f, -0.5f, 0.5f, //2 дяльняя по z
+            0.5f, -0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            -0.5f, 0.5f, 0.5f,
+            -0.5f, -0.5f, 0.5f,
+
+            -0.5f, 0.5f, 0.5f, //3 лево
+            -0.5f, 0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, 0.5f,
+            -0.5f, 0.5f, 0.5f,
+
+            0.5f, 0.5f, 0.5f,  //4 право
+            0.5f, 0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+
+            -0.5f, -0.5f, -0.5f,  //5 низ
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, 0.5f,
+            0.5f, -0.5f, 0.5f,
+            -0.5f, -0.5f, 0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f, 0.5f, -0.5f,  //6 верх
+            0.5f, 0.5f, -0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            -0.5f, 0.5f, 0.5f,
+            -0.5f, 0.5f, -0.5f};
+    static Float[] blockCollors = {
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+
+            0.6f, 0.6f, 0.6f,
+            0.6f, 0.6f, 0.6f,
+            0.6f, 0.6f, 0.6f,
+            0.6f, 0.6f, 0.6f,
+            0.6f, 0.6f, 0.6f,
+            0.6f, 0.6f, 0.6f,
+
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+            0.4f, 0.4f, 0.4f,
+
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f
+    };
+
+    static Float[] blockNormales = {
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f
+    };
+    static Mash blockMash = new Mash(blockVertex, blockCollors, blockNormales);
+    static Mash m = new Mash();
+    static Block bl = new Block((short) 1, blockMash, false);
+    static Block bl0 = new Block((short)0, m, false);
     private Vector3f position;
-    private final int sizeXZ = 32;
-    private final int sizeY = 128;
+    private final int sizeXZ = 64;
+    private final int sizeY = 256;
     private boolean changed = false;
 
-    private Mash mash;
+    //Временное поле, надо убрать
+    private int vertexCount;
+
+    private Float[] toDrawVertexBuffer;
+    private Float[] toDrawColorsBuffer;
+    private Float[] toDrawNormalsBuffer;
 
     private Block[][][] blocks = new Block[sizeXZ][sizeY][sizeXZ];
 
@@ -25,146 +166,15 @@ public class Chunk {
     }
 
     public void generate() {
-        //сделать загрузку из файла
-        //и вообще инициализация должна быть не здесь (абстракции...)
-        Float[] blockVertex = new Float[]{
-                -0.5f, -0.5f, -0.5f, //1 ближняя по z
-                0.5f, -0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f,
-                0.5f, 0.5f, -0.5f,
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
 
-                -0.5f, -0.5f, 0.5f, //2 дяльняя по z
-                0.5f, -0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, -0.5f, 0.5f,
-
-                -0.5f, 0.5f, 0.5f, //3 лево
-                -0.5f, 0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, -0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,  //4 право
-                0.5f, 0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                -0.5f, -0.5f, -0.5f,  //5 низ
-                0.5f, -0.5f, -0.5f,
-                0.5f, -0.5f, 0.5f,
-                0.5f, -0.5f, 0.5f,
-                -0.5f, -0.5f, 0.5f,
-                -0.5f, -0.5f, -0.5f,
-
-                -0.5f, 0.5f, -0.5f,  //6 верх
-                0.5f, 0.5f, -0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                -0.5f, 0.5f, 0.5f,
-                -0.5f, 0.5f, -0.5f};
-        Float[] blockCollors = {
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f,
-                0.5f, 0.5f, 0.5f
-        };
-
-        Float[] blockNormales = {
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f
-        };
-        Mash blockMash = new Mash(blockVertex, blockCollors, blockNormales);
         FloatBuffer bf = BufferUtils.createFloatBuffer(16);
         for (int x = 0; x < this.sizeXZ; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeXZ; z++) {
                     if (y < 10 + Math.sin(x) + Math.cos(z)) {
-                        blocks[x][y][z] = new Block(1, blockMash, false);
+                        blocks[x][y][z] = bl;
                     } else {
-                        blocks[x][y][z] = new Block(0, new Mash(), false);
+                        blocks[x][y][z] = bl0;
                     }
                 }
             }
@@ -180,82 +190,127 @@ public class Chunk {
         return this.changed;
     }
 
-    public Mash getMash() {
-        return this.mash;
+    public Float[] getToDrawVertexBuffer() {
+        return this.toDrawVertexBuffer;
     }
 
-    private void addOffsetToVertex(Float[] vertex, int xOffset, int yOffset, int zOffset) {
+    private void addOffsetToAttributes(Float[] vertex, Float[] colors, Float[] normals, int xOffset, int yOffset, int zOffset) {
         for (int i = 0; i < vertex.length; i += 3) {
             vertex[i] += xOffset;
             vertex[i + 1] += yOffset;
             vertex[i + 2] += zOffset;
         }
+
     }
 
-    private Float[] getVisibleSidesOfBlocksVertex(int sideOffset, int xOffset, int yOffset, int zOffset) {
+    private Float[][] getVisibleSidesOfBlocksVertex(int sideOffset, int xOffset, int yOffset, int zOffset) {
         Float[] vertexArray;
-        Float[] collorsArray;
-        Float[] normalesArray;
+        Float[] colorsArray;
+        Float[] normalsArray;
+        Mash currentMash;
         if (!blocks[xOffset][yOffset][zOffset].getSpecial()) {
-            vertexArray = blocks[xOffset][yOffset][zOffset].getSideMash(sideOffset).getVertex();
-            this.addOffsetToVertex(vertexArray, xOffset, yOffset, zOffset);
+            currentMash = blocks[xOffset][yOffset][zOffset].getSideMash(sideOffset);
         } else {
-            vertexArray = blocks[xOffset][yOffset][zOffset].getMash().getVertex();
-            this.addOffsetToVertex(vertexArray, xOffset, yOffset, zOffset);
+            currentMash = blocks[xOffset][yOffset][zOffset].getMash();
         }
-        return vertexArray;
+        vertexArray = currentMash.getVertex();
+        colorsArray = currentMash.getColors();
+        normalsArray = currentMash.getNormals();
+        this.addOffsetToAttributes(vertexArray, colorsArray, normalsArray, xOffset, yOffset, zOffset);
+        Float[][] result = new Float[][]{
+                vertexArray,
+                colorsArray,
+                normalsArray
+        };
+        return result;
     }
 
     //можно отрефакторить но пока лень
     public void genBlocksMash() {
-        this.mash = new Mash();
-        Collection<Float> points = new ArrayList<>();
+        this.toDrawVertexBuffer = new Float[0];
+        Collection<Float> vertexesC = new ArrayList<>();
+        Collection<Float> colorsC = new ArrayList<>();
+        Collection<Float> normalsC = new ArrayList<>();
         for (int x = 0; x < this.sizeXZ; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeXZ; z++) {
                     if (blocks[x][y][z].getType() == 0) {
                         if (x != 0) {
                             if (blocks[x - 1][y][z].getType() != 0) {//1
-                                Float[] vertexArray = getVisibleSidesOfBlocksVertex(3, x - 1, y, z);
-                                points.addAll(Arrays.asList(vertexArray));
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x - 1, y, z);
+                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                                colorsC.addAll(Arrays.asList(attributeArray[1]));
+                                normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
                         if (y != 0) {
                             if (blocks[x][y - 1][z].getType() != 0) {//2
-                                Float[] vertexArray = getVisibleSidesOfBlocksVertex(5, x, y - 1, z);
-                                points.addAll(Arrays.asList(vertexArray));
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(5, x, y - 1, z);
+                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                                colorsC.addAll(Arrays.asList(attributeArray[1]));
+                                normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
                         if (z != 0) {
                             if (blocks[x][y][z - 1].getType() != 0) {//3
-                                Float[] vertexArray = getVisibleSidesOfBlocksVertex(0, x, y, z - 1);
-                                points.addAll(Arrays.asList(vertexArray));
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(1, x, y, z - 1);
+                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                                colorsC.addAll(Arrays.asList(attributeArray[1]));
+                                normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
-                        if (x < this.sizeXZ - 1) {
-                            if (blocks[x + 1][y][z].getType() != 0) {//4
-                                Float[] vertexArray = getVisibleSidesOfBlocksVertex(2, x + 1, y, z);
-                                points.addAll(Arrays.asList(vertexArray));
+                    }
+                    if (blocks[x][y][z].getType() != 0) {
+                        if (x != 0) {
+                            if (blocks[x - 1][y][z].getType() == 0) {//4
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(2, x, y, z);
+                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                                colorsC.addAll(Arrays.asList(attributeArray[1]));
+                                normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
-                        if (y < this.sizeY - 1) {
-                            if (blocks[x][y + 1][z].getType() != 0) {//5
-                                Float[] vertexArray = getVisibleSidesOfBlocksVertex(4, x, y + 1, z);
-                                points.addAll(Arrays.asList(vertexArray));
+                        if (y != 0) {
+                            if (blocks[x][y - 1][z].getType() == 0) {//5
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x, y , z);
+                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                                colorsC.addAll(Arrays.asList(attributeArray[1]));
+                                normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
-                        if (z < this.sizeXZ - 1) {
-                            if (blocks[x][y][z + 1].getType() != 0) {//6
-                                Float[] vertexArray = getVisibleSidesOfBlocksVertex(1, x, y, z + 1);
-                                points.addAll(Arrays.asList(vertexArray));
+                        if (z != 0) {
+                            if (blocks[x][y][z - 1].getType() == 0) {//6
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(0, x, y, z );
+                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                                colorsC.addAll(Arrays.asList(attributeArray[1]));
+                                normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
+
                     }
                 }
             }
         }
         Float[] arr = new Float[0];
-        arr = points.toArray(arr);
-        this.mash = new Mash(arr);
+        this.toDrawVertexBuffer = vertexesC.toArray(arr);
+        this.vertexCount = this.toDrawVertexBuffer.length/3;
+        arr = new Float[0];
+        this.toDrawColorsBuffer = colorsC.toArray(arr);
+        arr = new Float[0];
+        this.toDrawNormalsBuffer = normalsC.toArray(arr);
+        vertexesC.clear();
+        colorsC.clear();
+        normalsC.clear();
+    }
+
+    public Float[] getToDrawColorsBuffer() {
+        return toDrawColorsBuffer;
+    }
+
+    public Float[] getToDrawNormalsBuffer() {
+        return toDrawNormalsBuffer;
+    }
+
+    public int getVertexCount(){
+        return this.vertexCount;
     }
 }
