@@ -1,45 +1,60 @@
 public class Mash {
-    public static float[] vert = new float[]{
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,//1 ближняя по z
-            0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.5f,  0.5f, 0.5f,
+    private Float[] vertex;
+    private Float[] colors;
+    private Float[] normals;
 
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.5f,  0.5f, 0.5f,//2 дяльняя по z
-            0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.5f,  0.5f, 0.5f,
+    private int countOfInitAttr;
 
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,//3 лево
-            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
+    public Mash(){
+        super();
+        this.vertex = new Float[0];
+        this.colors = this.vertex;
+    }
 
-            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,//4 право
-            0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 0.5f,  0.5f, 0.5f,
+    public Mash(Float[] vertex){
+        this.vertex = vertex;
+        this.colors = new Float[0];
+        this.countOfInitAttr = 1;
+    }
 
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.5f,  0.5f, 0.5f,//5 низ
-            0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
+    public Mash(Float[] vertex, Float[] colors){
+        this.vertex = vertex;
+        this.colors = colors;
+        this.countOfInitAttr = 2;
+    }
 
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,//6 верх
-            0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.5f,  0.5f, 0.5f};
-    public static float toDraw[] = new float[0];
+    public Mash(Float[] vertex, Float[] colors, Float[] normals){
+        this.vertex = vertex;
+        this.colors = colors;
+        this.normals = normals;
+        this.countOfInitAttr = 3;
+    }
+
+    public int getCountOfInitAttribute(){
+        return  this.countOfInitAttr;
+    }
+
+    public Float[] getVertex(){
+        return this.vertex;
+    }
+
+    public int getVertexCount(){
+        return this.vertex.length/3;
+    }
+
+    public Float[] getColors(){
+        return this.colors;
+    }
+
+    public int getColorsCount(){
+        return this.colors.length/3;
+    }
+
+    public Float[] getNormals(){
+        return this.colors;
+    }
+
+    public int getNormalsCount(){
+        return this.colors.length/3;
+    }
 }

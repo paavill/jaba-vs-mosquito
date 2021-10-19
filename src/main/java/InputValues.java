@@ -15,6 +15,7 @@ public class InputValues {
         put(GLFW_KEY_A,false);
         put(GLFW_KEY_LEFT_SHIFT, false);
         put(GLFW_KEY_SPACE, false);
+        put(GLFW_KEY_LEFT_CONTROL, false);
     }};
 
     private static Tuple<Float, Float> mousePos = new Tuple(0f, 0f);

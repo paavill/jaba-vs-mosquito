@@ -4,26 +4,23 @@ import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
-import org.lwjgl.system.windows.WINDOWPLACEMENT;
 
 import java.io.*;
 import java.nio.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 public class Renderer {
 
     private long window;
-    private static int FRAME_TIME_MS = 1000 / 60;
+    private static final int FRAME_TIME_MS = 1000 / 60;
 
     public void run() {
         System.out.println("Привет LWJGL " + Version.getVersion() + "!");
@@ -102,39 +99,48 @@ public class Renderer {
         glfwGetWindowSize(window, width, height);
 
         Camera camera = new Camera(new Vector3f(0f, 0f, 3.f),
-                                    new Tuple<Float, Float>((float) width.get() / 2, (float) height.get() / 2),
-                                    -90, 0, 0.3f, 0.3f);
+                new Tuple<Float, Float>((float) width.get() / 2, (float) height.get() / 2),
+                -90, 0, 0.3f, 0.3f);
 
         InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
 
-        Collection<Chank> chanks = new ArrayList<Chank>();
-        for(int x = 0; x < 1; x++){
-            for(int z = 0; z < 1; z++){
-                chanks.add(new Chank(new Vector3f(32*x,0,32*z)));
+        Collection<Chunk> chanks = new ArrayList<Chunk>();
+        for (int x = 0; x < 10; x++) {
+            for (int z = 0; z < 10; z++) {
+                chanks.add(new Chunk(new Vector3f(32 * x, 0, 32 * z)));
             }
         }
 
-       chanks.forEach(chank -> chank.generate());
+        chanks.forEach(chank -> chank.generate());
+        chanks.forEach(chank -> chank.genBlocksMash());
+        chanks.forEach(chank -> MashRenderer.addObjectToDrow(chank));
 
         double start;
         double end;
         double delta = 0;
 
         Matrix4f projection = new Matrix4f();
-        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 100.f);
+        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 200.f);
 
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
+        MashRenderer.setShaderProgram(shaderProgram);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         while (!glfwWindowShouldClose(window)) {
 
             start = glfwGetTime();
 
-            camera.update();
 
-            glfwSetCursorPos(window, camera.getViewCenter().x, camera.getViewCenter().y);
-            InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
+            if (!InputValues.getStateByKey(GLFW_KEY_LEFT_CONTROL)) {
+                camera.update();
+                glfwSetCursorPos(window, camera.getViewCenter().x, camera.getViewCenter().y);
+                InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            } else {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
 
             glUseProgram(shaderProgram);
 
@@ -146,13 +152,10 @@ public class Renderer {
             atrPos = glGetUniformLocation(shaderProgram, "projection");
             glUniformMatrix4fv(atrPos, false, projection.get(fb));
 
-            atrPos = glGetUniformLocation(shaderProgram, "lightPos");
-            glUniform3f(atrPos, 3, 10, 3);
+            //atrPos = glGetUniformLocation(shaderProgram, "lightPos");
+            //glUniform3f(atrPos, 3, 10, 3);
 
-
-            chanks.forEach(chank -> chank.draw(shaderProgram));
-
-            //glDrawElements(GL_TRIANGLES, indexes.length, GL_UNSIGNED_INT, 0L);
+            MashRenderer.drawAll();
 
             glUseProgram(0);
             glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
