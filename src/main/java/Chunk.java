@@ -139,13 +139,13 @@ public class Chunk {
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f
     };
-    static Mash blockMash = new Mash(blockVertex, blockCollors, blockNormales);
-    static Mash m = new Mash();
-    static Block bl = new Block((short) 1, blockMash, false);
-    static Block bl0 = new Block((short)0, m, false);
+    private static Mash blockMash = new Mash(blockVertex, blockCollors, blockNormales);
+    private static Mash m = new Mash();
+    private static Block[] bl = {new Block((short) 0, m, false), new Block((short) 1, blockMash, false)};
+
     private Vector3f position;
-    private final int sizeXZ = 64;
-    private final int sizeY = 256;
+    private final static int sizeXZ = 64;
+    private final static int sizeY = 128;
     private boolean changed = false;
 
     //Временное поле, надо убрать
@@ -155,7 +155,7 @@ public class Chunk {
     private Float[] toDrawColorsBuffer;
     private Float[] toDrawNormalsBuffer;
 
-    private Block[][][] blocks = new Block[sizeXZ][sizeY][sizeXZ];
+    private short[][][] blocks = new short[sizeXZ][sizeY][sizeXZ];
 
     public Chunk(Vector3f position) {
         this.position = position;
@@ -171,10 +171,10 @@ public class Chunk {
         for (int x = 0; x < this.sizeXZ; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeXZ; z++) {
-                    if (y < 10 + Math.sin(x) + Math.cos(z)) {
-                        blocks[x][y][z] = bl;
+                    if (y < 10 + 5*(Math.sin(x) + Math.cos(z))) {
+                        blocks[x][y][z] = 1;
                     } else {
-                        blocks[x][y][z] = bl0;
+                        blocks[x][y][z] = 0;
                     }
                 }
             }
@@ -188,6 +188,12 @@ public class Chunk {
 
     public boolean getChanged() {
         return this.changed;
+    }
+
+    public void clear() {
+        this.toDrawVertexBuffer = null;
+        this.toDrawNormalsBuffer = null;
+        this.toDrawColorsBuffer = null;
     }
 
     public Float[] getToDrawVertexBuffer() {
@@ -208,10 +214,10 @@ public class Chunk {
         Float[] colorsArray;
         Float[] normalsArray;
         Mash currentMash;
-        if (!blocks[xOffset][yOffset][zOffset].getSpecial()) {
-            currentMash = blocks[xOffset][yOffset][zOffset].getSideMash(sideOffset);
+        if (!bl[blocks[xOffset][yOffset][zOffset]].getSpecial()) {
+            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMash(sideOffset);
         } else {
-            currentMash = blocks[xOffset][yOffset][zOffset].getMash();
+            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getMash();
         }
         vertexArray = currentMash.getVertex();
         colorsArray = currentMash.getColors();
@@ -234,9 +240,9 @@ public class Chunk {
         for (int x = 0; x < this.sizeXZ; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeXZ; z++) {
-                    if (blocks[x][y][z].getType() == 0) {
+                    if (bl[blocks[x][y][z]].getType() == 0) {
                         if (x != 0) {
-                            if (blocks[x - 1][y][z].getType() != 0) {//1
+                            if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
                                 Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x - 1, y, z);
                                 vertexesC.addAll(Arrays.asList(attributeArray[0]));
                                 colorsC.addAll(Arrays.asList(attributeArray[1]));
@@ -244,7 +250,7 @@ public class Chunk {
                             }
                         }
                         if (y != 0) {
-                            if (blocks[x][y - 1][z].getType() != 0) {//2
+                            if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
                                 Float[][] attributeArray = getVisibleSidesOfBlocksVertex(5, x, y - 1, z);
                                 vertexesC.addAll(Arrays.asList(attributeArray[0]));
                                 colorsC.addAll(Arrays.asList(attributeArray[1]));
@@ -252,7 +258,7 @@ public class Chunk {
                             }
                         }
                         if (z != 0) {
-                            if (blocks[x][y][z - 1].getType() != 0) {//3
+                            if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
                                 Float[][] attributeArray = getVisibleSidesOfBlocksVertex(1, x, y, z - 1);
                                 vertexesC.addAll(Arrays.asList(attributeArray[0]));
                                 colorsC.addAll(Arrays.asList(attributeArray[1]));
@@ -260,9 +266,9 @@ public class Chunk {
                             }
                         }
                     }
-                    if (blocks[x][y][z].getType() != 0) {
+                    if (bl[blocks[x][y][z]].getType() != 0) {
                         if (x != 0) {
-                            if (blocks[x - 1][y][z].getType() == 0) {//4
+                            if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
                                 Float[][] attributeArray = getVisibleSidesOfBlocksVertex(2, x, y, z);
                                 vertexesC.addAll(Arrays.asList(attributeArray[0]));
                                 colorsC.addAll(Arrays.asList(attributeArray[1]));
@@ -270,16 +276,16 @@ public class Chunk {
                             }
                         }
                         if (y != 0) {
-                            if (blocks[x][y - 1][z].getType() == 0) {//5
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x, y , z);
+                            if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x, y, z);
                                 vertexesC.addAll(Arrays.asList(attributeArray[0]));
                                 colorsC.addAll(Arrays.asList(attributeArray[1]));
                                 normalsC.addAll(Arrays.asList(attributeArray[2]));
                             }
                         }
                         if (z != 0) {
-                            if (blocks[x][y][z - 1].getType() == 0) {//6
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(0, x, y, z );
+                            if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
+                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(0, x, y, z);
                                 vertexesC.addAll(Arrays.asList(attributeArray[0]));
                                 colorsC.addAll(Arrays.asList(attributeArray[1]));
                                 normalsC.addAll(Arrays.asList(attributeArray[2]));
@@ -292,7 +298,7 @@ public class Chunk {
         }
         Float[] arr = new Float[0];
         this.toDrawVertexBuffer = vertexesC.toArray(arr);
-        this.vertexCount = this.toDrawVertexBuffer.length/3;
+        this.vertexCount = this.toDrawVertexBuffer.length / 3;
         arr = new Float[0];
         this.toDrawColorsBuffer = colorsC.toArray(arr);
         arr = new Float[0];
@@ -310,7 +316,7 @@ public class Chunk {
         return toDrawNormalsBuffer;
     }
 
-    public int getVertexCount(){
+    public int getVertexCount() {
         return this.vertexCount;
     }
 }

@@ -43,6 +43,7 @@ public class MashRenderer {
         float[] wrapBuffColors = arrayWrapperToSimple(object.getToDrawColorsBuffer());
         float[] wrapBuffNormals = arrayWrapperToSimple(object.getToDrawNormalsBuffer());
 
+        object.clear();
         glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO0);

@@ -105,8 +105,8 @@ public class Renderer {
 
 
         Collection<Chunk> chunks = new ArrayList<Chunk>();
-        for (int x = 0; x < 10; x++) {
-            for (int z = 0; z < 10; z++) {
+        for (int x = 0; x < 7; x++) {
+            for (int z = 0; z < 7; z++) {
                 chunks.add(new Chunk(new Vector3f(64 * x, 0, 64 * z)));
             }
         }
@@ -114,8 +114,9 @@ public class Renderer {
         chunks.forEach(chunk -> chunk.generate());
         //пофиксить чрезмерную трату памяти в следующем методе
         chunks.forEach(chunk -> chunk.genBlocksMash());
-        System.gc();
+
         chunks.forEach(chunk -> MashRenderer.addObjectToDraw(chunk));
+        System.gc();
 
         double start;
         double end;
@@ -132,7 +133,6 @@ public class Renderer {
         while (!glfwWindowShouldClose(window)) {
 
             start = glfwGetTime();
-
 
             if (!InputValues.getStateByKey(GLFW_KEY_LEFT_CONTROL)) {
                 camera.update();
@@ -159,7 +159,7 @@ public class Renderer {
             MashRenderer.drawAll();
 
             glUseProgram(0);
-            glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+            glClearColor(0.0f, 0.749f, 1.f, 0.0f);
             glfwSwapBuffers(window);
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -168,7 +168,7 @@ public class Renderer {
             end = glfwGetTime();
             delta = start + FRAME_TIME_MS - end;
             if (delta > 0) {
-                //Thread.sleep(Math.round(delta));
+                Thread.sleep(Math.round(delta));
             }
         }
     }

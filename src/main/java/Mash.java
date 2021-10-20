@@ -38,6 +38,7 @@ public class Mash {
         return this.vertex;
     }
 
+
     public int getVertexCount(){
         return this.vertex.length/3;
     }
