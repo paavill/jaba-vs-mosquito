@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
+
 public class Chunk {
     //сделать загрузку из файла
     //и вообще инициализация должна быть не здесь (абстракции...)
@@ -171,7 +173,7 @@ public class Chunk {
         for (int x = 0; x < this.sizeXZ; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeXZ; z++) {
-                    if (y < 10 + 5*(Math.sin(x) + Math.cos(z))) {
+                    if (y < 10 + (Math.sin(x) + Math.cos(z))) {
                         blocks[x][y][z] = 1;
                     } else {
                         blocks[x][y][z] = 0;
@@ -237,63 +239,52 @@ public class Chunk {
         Collection<Float> vertexesC = new ArrayList<>();
         Collection<Float> colorsC = new ArrayList<>();
         Collection<Float> normalsC = new ArrayList<>();
-        for (int x = 0; x < this.sizeXZ; x++) {
-            for (int y = 0; y < this.sizeY; y++) {
-                for (int z = 0; z < this.sizeXZ; z++) {
+        for (int x = 1; x < this.sizeXZ; x++) {
+            for (int y = 1; y < this.sizeY; y++) {
+                for (int z = 1; z < this.sizeXZ; z++) {
+                    double s = glfwGetTime();
                     if (bl[blocks[x][y][z]].getType() == 0) {
-                        if (x != 0) {
-                            if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x - 1, y, z);
-                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                                colorsC.addAll(Arrays.asList(attributeArray[1]));
-                                normalsC.addAll(Arrays.asList(attributeArray[2]));
-                            }
+                        if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
+                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x - 1, y, z);
+                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                            colorsC.addAll(Arrays.asList(attributeArray[1]));
+                            normalsC.addAll(Arrays.asList(attributeArray[2]));
                         }
-                        if (y != 0) {
-                            if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(5, x, y - 1, z);
-                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                                colorsC.addAll(Arrays.asList(attributeArray[1]));
-                                normalsC.addAll(Arrays.asList(attributeArray[2]));
-                            }
+                        if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
+                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(5, x, y - 1, z);
+                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                            colorsC.addAll(Arrays.asList(attributeArray[1]));
+                            normalsC.addAll(Arrays.asList(attributeArray[2]));
                         }
-                        if (z != 0) {
-                            if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(1, x, y, z - 1);
-                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                                colorsC.addAll(Arrays.asList(attributeArray[1]));
-                                normalsC.addAll(Arrays.asList(attributeArray[2]));
-                            }
+                        if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
+                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(1, x, y, z - 1);
+                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                            colorsC.addAll(Arrays.asList(attributeArray[1]));
+                            normalsC.addAll(Arrays.asList(attributeArray[2]));
                         }
                     }
                     if (bl[blocks[x][y][z]].getType() != 0) {
-                        if (x != 0) {
-                            if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(2, x, y, z);
-                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                                colorsC.addAll(Arrays.asList(attributeArray[1]));
-                                normalsC.addAll(Arrays.asList(attributeArray[2]));
-                            }
+                        if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
+                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(2, x, y, z);
+                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                            colorsC.addAll(Arrays.asList(attributeArray[1]));
+                            normalsC.addAll(Arrays.asList(attributeArray[2]));
                         }
-                        if (y != 0) {
-                            if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x, y, z);
-                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                                colorsC.addAll(Arrays.asList(attributeArray[1]));
-                                normalsC.addAll(Arrays.asList(attributeArray[2]));
-                            }
+                        if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
+                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x, y, z);
+                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                            colorsC.addAll(Arrays.asList(attributeArray[1]));
+                            normalsC.addAll(Arrays.asList(attributeArray[2]));
                         }
-                        if (z != 0) {
-                            if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
-                                Float[][] attributeArray = getVisibleSidesOfBlocksVertex(0, x, y, z);
-                                vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                                colorsC.addAll(Arrays.asList(attributeArray[1]));
-                                normalsC.addAll(Arrays.asList(attributeArray[2]));
-                            }
+                        if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
+                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(0, x, y, z);
+                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
+                            colorsC.addAll(Arrays.asList(attributeArray[1]));
+                            normalsC.addAll(Arrays.asList(attributeArray[2]));
                         }
-
                     }
                 }
+
             }
         }
         Float[] arr = new Float[0];

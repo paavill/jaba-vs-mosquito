@@ -104,18 +104,24 @@ public class Renderer {
         InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
 
-        Collection<Chunk> chunks = new ArrayList<Chunk>();
-        for (int x = 0; x < 7; x++) {
-            for (int z = 0; z < 7; z++) {
+        ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+        for (int x = 0; x <20; x++) {
+            for (int z = 0; z < 20; z++) {
                 chunks.add(new Chunk(new Vector3f(64 * x, 0, 64 * z)));
             }
         }
 
         chunks.forEach(chunk -> chunk.generate());
         //пофиксить чрезмерную трату памяти в следующем методе
-        chunks.forEach(chunk -> chunk.genBlocksMash());
+        for (Chunk e:chunks){
+            double s = glfwGetTime();
+            e.genBlocksMash();
+            MashRenderer.addObjectToDraw(e);
+            double en = glfwGetTime();
+            double del = en - s;
+            //System.out.println(del);
+        }
 
-        chunks.forEach(chunk -> MashRenderer.addObjectToDraw(chunk));
         System.gc();
 
         double start;
