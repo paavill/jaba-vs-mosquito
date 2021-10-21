@@ -29,7 +29,10 @@ public class Block {
     }
 
     public Mash getMash(){
-        return this.mash;
+        Float[] v = this.mash.getVertex().clone();
+        Float[] c = this.mash.getColors().clone();
+        Float[] n = this.mash.getNormals().clone();
+        return new Mash(v, c, n);
     }
 
     public boolean getSpecial(){

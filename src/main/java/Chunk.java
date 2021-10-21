@@ -1,3 +1,4 @@
+import org.joml.SimplexNoise;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 
@@ -5,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Random;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
@@ -141,21 +143,23 @@ public class Chunk {
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f
     };
+
     private static Mash blockMash = new Mash(blockVertex, blockCollors, blockNormales);
     private static Mash m = new Mash();
     private static Block[] bl = {new Block((short) 0, m, false), new Block((short) 1, blockMash, false)};
 
     private Vector3f position;
-    private final static int sizeXZ = 64;
-    private final static int sizeY = 128;
+    private final static int sizeXZ = 16;
+    private final static int sizeY = 256;
     private boolean changed = false;
 
     //Временное поле, надо убрать
     private int vertexCount;
+    private static int chunkOffset = 0;
 
-    private Float[] toDrawVertexBuffer;
-    private Float[] toDrawColorsBuffer;
-    private Float[] toDrawNormalsBuffer;
+    private Collection<Float> vertexesC = new ArrayList<>();
+    private Collection<Float> colorsC = new ArrayList<>();
+    private Collection<Float> normalsC = new ArrayList<>();
 
     private short[][][] blocks = new short[sizeXZ][sizeY][sizeXZ];
 
@@ -167,22 +171,6 @@ public class Chunk {
         return this.position;
     }
 
-    public void generate() {
-
-        FloatBuffer bf = BufferUtils.createFloatBuffer(16);
-        for (int x = 0; x < this.sizeXZ; x++) {
-            for (int y = 0; y < this.sizeY; y++) {
-                for (int z = 0; z < this.sizeXZ; z++) {
-                    if (y < 10 + (Math.sin(x) + Math.cos(z))) {
-                        blocks[x][y][z] = 1;
-                    } else {
-                        blocks[x][y][z] = 0;
-                    }
-                }
-            }
-        }
-    }
-
     public void setBlock(int x, int y, int z, Block block) {
         this.changed = true;
         //доделать
@@ -192,17 +180,30 @@ public class Chunk {
         return this.changed;
     }
 
-    public void clear() {
-        this.toDrawVertexBuffer = null;
-        this.toDrawNormalsBuffer = null;
-        this.toDrawColorsBuffer = null;
+    public void generate() {
+        Random rand = new Random((long)glfwGetTime());
+        FloatBuffer bf = BufferUtils.createFloatBuffer(16);
+        for (int x = 0; x < this.sizeXZ; x++) {
+            for (int y = 0; y < this.sizeY; y++) {
+                for (int z = 0; z < this.sizeXZ; z++) {
+                    if (y < 20 + 5*SimplexNoise.noise((x+chunkOffset)/30.f, (z+chunkOffset)/30.f)) {
+                        blocks[x][y][z] = 1;
+                    } else {
+                        blocks[x][y][z] = 0;
+                    }
+                }
+            }
+        }
+        chunkOffset += 16;
     }
 
-    public Float[] getToDrawVertexBuffer() {
-        return this.toDrawVertexBuffer;
+    public void clearChunkToDrawBuffers() {
+        this.vertexesC.clear();
+        this.colorsC.clear();
+        this.normalsC.clear();
     }
 
-    private void addOffsetToAttributes(Float[] vertex, Float[] colors, Float[] normals, int xOffset, int yOffset, int zOffset) {
+    private void addOffsetToAttributes(Float[] vertex, int xOffset, int yOffset, int zOffset) {
         for (int i = 0; i < vertex.length; i += 3) {
             vertex[i] += xOffset;
             vertex[i + 1] += yOffset;
@@ -211,7 +212,7 @@ public class Chunk {
 
     }
 
-    private Float[][] getVisibleSidesOfBlocksVertex(int sideOffset, int xOffset, int yOffset, int zOffset) {
+    private Float[][] getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
         Float[] vertexArray;
         Float[] colorsArray;
         Float[] normalsArray;
@@ -224,7 +225,7 @@ public class Chunk {
         vertexArray = currentMash.getVertex();
         colorsArray = currentMash.getColors();
         normalsArray = currentMash.getNormals();
-        this.addOffsetToAttributes(vertexArray, colorsArray, normalsArray, xOffset, yOffset, zOffset);
+        this.addOffsetToAttributes(vertexArray, xOffset, yOffset, zOffset);
         Float[][] result = new Float[][]{
                 vertexArray,
                 colorsArray,
@@ -233,78 +234,69 @@ public class Chunk {
         return result;
     }
 
+    private void addAttributesDataToCollections(int sideOffset, int xOffset, int yOffset, int zOffset) {
+        Float[][] attributeArray = getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
+        vertexesC.addAll(Arrays.asList(attributeArray[0]));
+        colorsC.addAll(Arrays.asList(attributeArray[1]));
+        normalsC.addAll(Arrays.asList(attributeArray[2]));
+    }
+
     //можно отрефакторить но пока лень
     public void genBlocksMash() {
-        this.toDrawVertexBuffer = new Float[0];
-        Collection<Float> vertexesC = new ArrayList<>();
-        Collection<Float> colorsC = new ArrayList<>();
-        Collection<Float> normalsC = new ArrayList<>();
-        for (int x = 1; x < this.sizeXZ; x++) {
-            for (int y = 1; y < this.sizeY; y++) {
-                for (int z = 1; z < this.sizeXZ; z++) {
+        for (int x = 0; x < this.sizeXZ; x++) {
+            for (int y = 0; y < this.sizeY; y++) {
+                for (int z = 0; z < this.sizeXZ; z++) {
                     double s = glfwGetTime();
                     if (bl[blocks[x][y][z]].getType() == 0) {
-                        if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
-                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x - 1, y, z);
-                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                            colorsC.addAll(Arrays.asList(attributeArray[1]));
-                            normalsC.addAll(Arrays.asList(attributeArray[2]));
+                        if (x != 0) {
+                            if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
+                                this.addAttributesDataToCollections(3, x - 1, y, z);
+                            }
                         }
-                        if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
-                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(5, x, y - 1, z);
-                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                            colorsC.addAll(Arrays.asList(attributeArray[1]));
-                            normalsC.addAll(Arrays.asList(attributeArray[2]));
+                        if (y != 0) {
+                            if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
+                                this.addAttributesDataToCollections(5, x, y - 1, z);
+                            }
                         }
-                        if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
-                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(1, x, y, z - 1);
-                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                            colorsC.addAll(Arrays.asList(attributeArray[1]));
-                            normalsC.addAll(Arrays.asList(attributeArray[2]));
+                        if (z != 0) {
+                            if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
+                                this.addAttributesDataToCollections(1, x, y, z - 1);
+                            }
                         }
                     }
                     if (bl[blocks[x][y][z]].getType() != 0) {
-                        if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
-                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(2, x, y, z);
-                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                            colorsC.addAll(Arrays.asList(attributeArray[1]));
-                            normalsC.addAll(Arrays.asList(attributeArray[2]));
+                        if (x != 0) {
+                            if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
+                                this.addAttributesDataToCollections(2, x, y, z);
+                            }
                         }
-                        if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
-                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(3, x, y, z);
-                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                            colorsC.addAll(Arrays.asList(attributeArray[1]));
-                            normalsC.addAll(Arrays.asList(attributeArray[2]));
+                        if (y != 0) {
+                            if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
+                                this.addAttributesDataToCollections(3, x, y, z);
+                            }
                         }
-                        if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
-                            Float[][] attributeArray = getVisibleSidesOfBlocksVertex(0, x, y, z);
-                            vertexesC.addAll(Arrays.asList(attributeArray[0]));
-                            colorsC.addAll(Arrays.asList(attributeArray[1]));
-                            normalsC.addAll(Arrays.asList(attributeArray[2]));
+                        if (z != 0) {
+                            if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
+                                this.addAttributesDataToCollections(0, x, y, z);
+                            }
                         }
                     }
                 }
-
             }
         }
-        Float[] arr = new Float[0];
-        this.toDrawVertexBuffer = vertexesC.toArray(arr);
-        this.vertexCount = this.toDrawVertexBuffer.length / 3;
-        arr = new Float[0];
-        this.toDrawColorsBuffer = colorsC.toArray(arr);
-        arr = new Float[0];
-        this.toDrawNormalsBuffer = normalsC.toArray(arr);
-        vertexesC.clear();
-        colorsC.clear();
-        normalsC.clear();
+        this.vertexCount = this.vertexesC.size() / 3;
     }
 
-    public Float[] getToDrawColorsBuffer() {
-        return toDrawColorsBuffer;
+    public Collection<Float> getToDrawColorsBuffer() {
+        return this.vertexesC;
     }
 
-    public Float[] getToDrawNormalsBuffer() {
-        return toDrawNormalsBuffer;
+    public Collection<Float> getToDrawNormalsBuffer() {
+        return this.normalsC;
+    }
+
+    public Collection<Float> getToDrawVertexBuffer() {
+        return this.vertexesC;
     }
 
     public int getVertexCount() {
