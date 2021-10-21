@@ -1,4 +1,4 @@
-import java.util.Arrays;
+import java.util.*;
 
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 
@@ -14,13 +14,13 @@ public class Block {
     }
 
     public Mash getSideMash(int offset){
-        Float[] vertex = this.mash.getVertex();
-        Float[] colors = this.mash.getColors();
-        Float[] normals = this.mash.getNormals();
+        List<Float> vertex = (List<Float>) this.mash.getVertex();
+        List<Float>  colors = (List<Float>)this.mash.getColors();
+        List<Float>  normals = (List<Float>)this.mash.getNormals();
 
-        Float[] topSideVertex = Arrays.copyOfRange(vertex, offset*18, offset*18 + 18);
-        Float[] topSideColors = Arrays.copyOfRange(colors, offset*18, offset*18 + 18);
-        Float[] topSideNormals = Arrays.copyOfRange(normals, offset*18, offset*18 + 18);
+        ArrayList<Float> topSideVertex = new ArrayList<Float>(vertex.subList(offset*18, offset*18 + 18));
+        ArrayList<Float> topSideColors = new ArrayList<Float>(colors.subList(offset*18, offset*18 + 18));
+        ArrayList<Float> topSideNormals = new ArrayList<Float>(normals.subList(offset*18, offset*18 + 18));
         return new Mash(topSideVertex, topSideColors, topSideNormals);
     }
 
@@ -29,9 +29,12 @@ public class Block {
     }
 
     public Mash getMash(){
-        Float[] v = this.mash.getVertex().clone();
-        Float[] c = this.mash.getColors().clone();
-        Float[] n = this.mash.getNormals().clone();
+        ArrayList<Float> v = new ArrayList<Float>(this.mash.getVertex().size());
+        Collections.copy(v, (List<Float>) this.mash.getVertex());
+        ArrayList<Float> c = new ArrayList<Float>(this.mash.getColors().size());
+        Collections.copy(v, (List<Float>) this.mash.getColors());
+        ArrayList<Float> n = new ArrayList<Float>(this.mash.getNormals().size());
+        Collections.copy(v, (List<Float>) this.mash.getNormals());
         return new Mash(v, c, n);
     }
 

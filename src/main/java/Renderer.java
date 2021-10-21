@@ -105,22 +105,17 @@ public class Renderer {
 
 
         ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
+        for (int x = 0; x < 70; x++) {
+            for (int z = 0; z < 70; z++) {
                 chunks.add(new Chunk(new Vector3f(16 * x, 0, 16 * z)));
             }
         }
 
         chunks.forEach(chunk -> chunk.generate());
         for (Chunk e:chunks){
-            double s = glfwGetTime();
             e.genBlocksMash();
             MashRenderer.addObjectToDraw(e);
-            double en = glfwGetTime();
-            double del = en - s;
-            //System.out.println(del);
         }
-        System.gc();
 
         double start;
         double end;

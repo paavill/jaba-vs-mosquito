@@ -3,10 +3,7 @@ import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Random;
+import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
@@ -14,7 +11,7 @@ public class Chunk {
     //сделать загрузку из файла
     //и вообще инициализация должна быть не здесь (абстракции...)
 
-    static Float[] blockVertex = new Float[]{
+    static List<Float> blockVertex = List.of(
             -0.5f, -0.5f, -0.5f, //1 ближняя по z
             0.5f, -0.5f, -0.5f,
             0.5f, 0.5f, -0.5f,
@@ -55,8 +52,8 @@ public class Chunk {
             0.5f, 0.5f, 0.5f,
             0.5f, 0.5f, 0.5f,
             -0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, -0.5f};
-    static Float[] blockCollors = {
+            -0.5f, 0.5f, -0.5f);
+    static List<Float> blockCollors = List.of(
             0.4f, 0.4f, 0.4f,
             0.4f, 0.4f, 0.4f,
             0.4f, 0.4f, 0.4f,
@@ -98,9 +95,9 @@ public class Chunk {
             0.5f, 0.5f, 0.5f,
             0.5f, 0.5f, 0.5f,
             0.5f, 0.5f, 0.5f
-    };
+    );
 
-    static Float[] blockNormales = {
+    static List<Float> blockNormales = List.of(
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
@@ -142,24 +139,26 @@ public class Chunk {
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f
-    };
+    );
 
-    private static Mash blockMash = new Mash(blockVertex, blockCollors, blockNormales);
-    private static Mash m = new Mash();
-    private static Block[] bl = {new Block((short) 0, m, false), new Block((short) 1, blockMash, false)};
+    private static final Mash blockMash = new Mash(new ArrayList<>(blockVertex), new ArrayList<>(blockCollors), new ArrayList<>(blockNormales));
+    private static final Mash m = new Mash();
+    private static final Block[] bl = {new Block((short) 0, m, false),
+            new Block((short) 1, blockMash, false)};
 
-    private Vector3f position;
+    private final Vector3f position;
     private final static int sizeXZ = 16;
     private final static int sizeY = 256;
     private boolean changed = false;
 
-    //Временное поле, надо убрать
-    private int vertexCount;
-    private static int chunkOffset = 0;
+    private int vertexCount = 0;
 
-    private Collection<Float> vertexesC = new ArrayList<>();
-    private Collection<Float> colorsC = new ArrayList<>();
-    private Collection<Float> normalsC = new ArrayList<>();
+    //Начать предоставлять извне, поскольку хранить в чанке невыгодно
+    //а статик не позволит сделать многопоточку (предоставлять при создании отдельного потока)
+    //но пока статик, чтобы показать минимальную занимаемую память
+    private static Collection<Float> vertexesC = new ArrayList<>();
+    private static Collection<Float> colorsC = new ArrayList<>();
+    private static Collection<Float> normalsC = new ArrayList<>();
 
     private short[][][] blocks = new short[sizeXZ][sizeY][sizeXZ];
 
@@ -186,7 +185,7 @@ public class Chunk {
         for (int x = 0; x < this.sizeXZ; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeXZ; z++) {
-                    if (y < 20 + 5*SimplexNoise.noise((x+chunkOffset)/30.f, (z+chunkOffset)/30.f)) {
+                    if (y < 60 + 60*SimplexNoise.noise((x+this.position.x)/30.f, (z+this.position.z)/30.f)) {
                         blocks[x][y][z] = 1;
                     } else {
                         blocks[x][y][z] = 0;
@@ -194,51 +193,40 @@ public class Chunk {
                 }
             }
         }
-        chunkOffset += 16;
     }
 
-    public void clearChunkToDrawBuffers() {
-        this.vertexesC.clear();
-        this.colorsC.clear();
-        this.normalsC.clear();
-    }
-
-    private void addOffsetToAttributes(Float[] vertex, int xOffset, int yOffset, int zOffset) {
-        for (int i = 0; i < vertex.length; i += 3) {
-            vertex[i] += xOffset;
-            vertex[i + 1] += yOffset;
-            vertex[i + 2] += zOffset;
+    private void addOffsetToAttributes(ArrayList<Float> vertex, int xOffset, int yOffset, int zOffset) {
+        for (int i = 0; i < vertex.size(); i += 3) {
+            vertex.set(i, vertex.get(i) + xOffset);
+            vertex.set(i+1, vertex.get(i+1) + yOffset);
+            vertex.set(i+2, vertex.get(i+2) + zOffset);
         }
 
     }
 
-    private Float[][] getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
-        Float[] vertexArray;
-        Float[] colorsArray;
-        Float[] normalsArray;
+    private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
         Mash currentMash;
         if (!bl[blocks[xOffset][yOffset][zOffset]].getSpecial()) {
             currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMash(sideOffset);
         } else {
             currentMash = bl[blocks[xOffset][yOffset][zOffset]].getMash();
         }
-        vertexArray = currentMash.getVertex();
-        colorsArray = currentMash.getColors();
-        normalsArray = currentMash.getNormals();
+        ArrayList<Float> vertexArray = currentMash.getVertex();
+        ArrayList<Float> colorsArray = currentMash.getColors();
+        ArrayList<Float> normalsArray = currentMash.getNormals();
         this.addOffsetToAttributes(vertexArray, xOffset, yOffset, zOffset);
-        Float[][] result = new Float[][]{
-                vertexArray,
-                colorsArray,
-                normalsArray
-        };
+        Collection<ArrayList<Float>> result = new ArrayList<ArrayList<Float>>();
+        result.add(vertexArray);
+        result.add(colorsArray);
+        result.add(normalsArray);
         return result;
     }
 
     private void addAttributesDataToCollections(int sideOffset, int xOffset, int yOffset, int zOffset) {
-        Float[][] attributeArray = getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
-        vertexesC.addAll(Arrays.asList(attributeArray[0]));
-        colorsC.addAll(Arrays.asList(attributeArray[1]));
-        normalsC.addAll(Arrays.asList(attributeArray[2]));
+        ArrayList<ArrayList<Float>> attributeArray = (ArrayList<ArrayList<Float>>)getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
+        vertexesC.addAll(attributeArray.get(0));
+        colorsC.addAll(attributeArray.get(1));
+        normalsC.addAll(attributeArray.get(2));
     }
 
     //можно отрефакторить но пока лень

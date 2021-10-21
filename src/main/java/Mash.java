@@ -1,29 +1,34 @@
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class Mash {
-    private Float[] vertex;
-    private Float[] colors;
-    private Float[] normals;
+    private ArrayList<Float> vertex;
+    private ArrayList<Float> colors;
+    private ArrayList<Float> normals;
 
     private int countOfInitAttr;
 
     public Mash(){
         super();
-        this.vertex = new Float[0];
+        this.vertex = new ArrayList<>();
         this.colors = this.vertex;
+        this.normals = this.colors;
+        this.countOfInitAttr = 0;
     }
 
-    public Mash(Float[] vertex){
+    public Mash(ArrayList<Float> vertex){
         this.vertex = vertex;
-        this.colors = new Float[0];
+        this.colors = new ArrayList<>();
         this.countOfInitAttr = 1;
     }
 
-    public Mash(Float[] vertex, Float[] colors){
+    public Mash(ArrayList<Float> vertex, ArrayList<Float> colors){
         this.vertex = vertex;
         this.colors = colors;
         this.countOfInitAttr = 2;
     }
 
-    public Mash(Float[] vertex, Float[] colors, Float[] normals){
+    public Mash(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals){
         this.vertex = vertex;
         this.colors = colors;
         this.normals = normals;
@@ -34,28 +39,28 @@ public class Mash {
         return  this.countOfInitAttr;
     }
 
-    public Float[] getVertex(){
+    public ArrayList<Float> getVertex(){
         return this.vertex;
     }
 
 
     public int getVertexCount(){
-        return this.vertex.length/3;
+        return this.vertex.size()/3;
     }
 
-    public Float[] getColors(){
+    public ArrayList<Float> getColors(){
         return this.colors;
     }
 
     public int getColorsCount(){
-        return this.colors.length/3;
+        return this.colors.size()/3;
     }
 
-    public Float[] getNormals(){
+    public ArrayList<Float> getNormals(){
         return this.colors;
     }
 
     public int getNormalsCount(){
-        return this.colors.length/3;
+        return this.colors.size()/3;
     }
 }

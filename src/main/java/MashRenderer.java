@@ -43,10 +43,11 @@ public class MashRenderer {
                 arrayWrapperToSimple(object.getToDrawColorsBuffer().toArray(tempArray)),
                 arrayWrapperToSimple(object.getToDrawNormalsBuffer().toArray(tempArray))
         };
+        object.getToDrawVertexBuffer().clear();
+        object.getToDrawColorsBuffer().clear();
+        object.getToDrawNormalsBuffer().clear();
 
-        object.clearChunkToDrawBuffers();
         glBindVertexArray(VAO);
-
         for(int i = 0; i < 3; i++){
             glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
             glBufferData(GL_ARRAY_BUFFER, attributeData[i], GL_STATIC_DRAW);
@@ -57,7 +58,6 @@ public class MashRenderer {
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER,0);
-        attributeData = null;
         return VAO;
     }
 
@@ -75,8 +75,7 @@ public class MashRenderer {
         glUniformMatrix4fv(atrPos, false, model.get(fb));
 
         glBindVertexArray(VAO);
-        int count = obj.getVertexCount();
-        glDrawArrays(GL_TRIANGLES, 0, count);
+        glDrawArrays(GL_TRIANGLES, 0, obj.getVertexCount());
         glBindVertexArray(0);
     }
 }
