@@ -4,26 +4,23 @@ import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
-import org.lwjgl.system.windows.WINDOWPLACEMENT;
 
 import java.io.*;
 import java.nio.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 public class Renderer {
 
     private long window;
-    private static int FRAME_TIME_MS = 1000 / 60;
+    private static final int FRAME_TIME_MS = 1000 / 60;
 
     public void run() {
         System.out.println("Привет LWJGL " + Version.getVersion() + "!");
@@ -96,45 +93,44 @@ public class Renderer {
 
         System.out.println(shadersCompileExceptionsMessages);
 
-        //  Arrays.copyOfRange()
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);
         glfwGetWindowSize(window, width, height);
 
         Camera camera = new Camera(new Vector3f(0f, 0f, 3.f),
-                                    new Tuple<Float, Float>((float) width.get() / 2, (float) height.get() / 2),
-                                    -90, 0, 0.3f, 0.3f);
+                new Tuple<Float, Float>((float) width.get() / 2, (float) height.get() / 2),
+                -90, 0, 0.3f, 0.3f);
 
         InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
-
-        Collection<Chank> chanks = new ArrayList<Chank>();
-        for(int x = 0; x < 1; x++){
-            for(int z = 0; z < 1; z++){
-                chanks.add(new Chank(new Vector3f(32*x,0,32*z)));
-            }
-        }
-
-       chanks.forEach(chank -> chank.generate());
+        ChunksManager.setRenderDistance(20);
+        ChunksManager.generateChunks();
+        ChunksManager.addAllChunksToDraw();
 
         double start;
         double end;
         double delta = 0;
 
         Matrix4f projection = new Matrix4f();
-        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 100.f);
+        projection.perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 1000.f);
 
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
+        MashRenderer.setShaderProgram(shaderProgram);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         while (!glfwWindowShouldClose(window)) {
 
             start = glfwGetTime();
 
-            camera.update();
-
-            glfwSetCursorPos(window, camera.getViewCenter().x, camera.getViewCenter().y);
-            InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
+            if (!InputValues.getStateByKey(GLFW_KEY_LEFT_CONTROL)) {
+                camera.update();
+                glfwSetCursorPos(window, camera.getViewCenter().x, camera.getViewCenter().y);
+                InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            } else {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
 
             glUseProgram(shaderProgram);
 
@@ -147,28 +143,21 @@ public class Renderer {
             glUniformMatrix4fv(atrPos, false, projection.get(fb));
 
             atrPos = glGetUniformLocation(shaderProgram, "lightPos");
-            glUniform3f(atrPos, 3, 10, 3);
+            glUniform3f(atrPos, 3, 20, 3);
 
-
-            chanks.forEach(chank -> chank.draw(shaderProgram));
-
-            //glDrawElements(GL_TRIANGLES, indexes.length, GL_UNSIGNED_INT, 0L);
+            MashRenderer.drawAll();
 
             glUseProgram(0);
-            glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+            glClearColor(0.0f, 0.749f, 1.f, 0.0f);
             glfwSwapBuffers(window);
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glfwPollEvents();
 
-            double d[] = new double[1];
-            //glGetVertexAttribdv(0, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING	,d);
-
-            //System.out.println(d[0]);
             end = glfwGetTime();
             delta = start + FRAME_TIME_MS - end;
             if (delta > 0) {
-                //Thread.sleep(Math.round(delta));
+                Thread.sleep(Math.round(delta));
             }
         }
     }

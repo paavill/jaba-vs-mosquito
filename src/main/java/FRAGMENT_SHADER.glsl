@@ -10,7 +10,7 @@ uniform vec3 lightPos;
 out vec4 FragColor;
 void main()
 {
-    float ambientStrength = 0.4;
+    float ambientStrength = 1.0;
     vec3 ambient = ambientStrength * vec3(1.0f);
 
     vec3 norm = normalize(Normal);
@@ -18,12 +18,11 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * vec3(1.0f);
     vec3 result = (ambient + diffuse) * Color;
-    if (abs(aPos.x) - 0.48f > 0.01f && abs(aPos.y) - 0.48f > 0.01f )
-        result = vec3(0.f);
-    if (abs(aPos.z) - 0.48f > 0.01f && abs(aPos.y) - 0.48f > 0.01f )
-            result = vec3(0.f);
-    if (abs(aPos.x) - 0.48f > 0.01f && abs(aPos.z) - 0.48f > 0.01f )
-            result = vec3(0.f);
-
+   // if (mod(aPos.x,  0.5f) < 0.02f && mod(aPos.y,  0.5f) < 0.02f )
+    //    result = vec3(0.f);
+   // if (mod(aPos.z,  0.5f) < 0.02f && mod(aPos.y,  0.5f) < 0.02f )
+    //    result = vec3(0.f);
+   // if (mod(aPos.x,  0.5f) < 0.02f && mod(aPos.z,  0.5f) < 0.02f )
+    //    result = vec3(0.f);
     FragColor = vec4(result, 1.0);
 }
