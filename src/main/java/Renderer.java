@@ -103,7 +103,7 @@ public class Renderer {
 
         InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
-        ChunksManager.setRenderDistance(20);
+        ChunksManager.setRenderDistance(32);
         ChunksManager.generateChunks();
         ChunksManager.addAllChunksToDraw();
 
@@ -117,8 +117,11 @@ public class Renderer {
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
+        //Не должно быть тут, предположительно будет перенесено в Renderer
+        //после переезда данного кода в класс Game (за бинд всего что связано с OGL
+        //будет отвечать Renderer
         MashRenderer.setShaderProgram(shaderProgram);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
         while (!glfwWindowShouldClose(window)) {
 
             start = glfwGetTime();

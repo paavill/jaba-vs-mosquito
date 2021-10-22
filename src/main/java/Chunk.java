@@ -186,7 +186,8 @@ public class Chunk {
     }
 
     private float generatingFunction(int x, int z) {
-        return 60 + 60 * SimplexNoise.noise((x + this.position.x) / 30.f, (z + this.position.z) / 30.f);
+        return 70 + 10 * SimplexNoise.noise((x + this.position.x) / 90.f, (z + this.position.z) / 70.f) +
+                60 * SimplexNoise.noise((x + this.position.x) / 400.f, (z + this.position.z) / 400.f);
     }
 
     private boolean generationPredicate(int x, int y, int z) {
@@ -270,7 +271,12 @@ public class Chunk {
                             if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
                                 this.addAttributesDataToCollections(2, x, y, z);
                             }
-                        } else {
+                            if (x == this.sizeX - 1) {
+                                if (!this.generationPredicate(x + 1, y, z)) {
+                                    this.addAttributesDataToCollections(3, x, y, z);
+                                }
+                            }
+                        } else if (x == 0) {
                             if (!this.generationPredicate(x - 1, y, z)) {
                                 this.addAttributesDataToCollections(2, x, y, z);
                             }
@@ -284,7 +290,12 @@ public class Chunk {
                             if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
                                 this.addAttributesDataToCollections(0, x, y, z);
                             }
-                        } else {
+                            if (z == this.sizeZ - 1) {
+                                if (!this.generationPredicate(x, y, z+1)) {
+                                    this.addAttributesDataToCollections(1, x, y, z);
+                                }
+                            }
+                        } else if (z == 0) {
                             if (!this.generationPredicate(x, y, z - 1)) {
                                 this.addAttributesDataToCollections(0, x, y, z);
                             }
