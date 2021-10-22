@@ -1,14 +1,14 @@
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class Mash {
+public class Mesh {
     private ArrayList<Float> vertex;
     private ArrayList<Float> colors;
     private ArrayList<Float> normals;
 
     private int countOfInitAttr;
 
-    public Mash(){
+    public Mesh(){
         super();
         this.vertex = new ArrayList<>();
         this.colors = this.vertex;
@@ -16,19 +16,19 @@ public class Mash {
         this.countOfInitAttr = 0;
     }
 
-    public Mash(ArrayList<Float> vertex){
+    public Mesh(ArrayList<Float> vertex){
         this.vertex = vertex;
         this.colors = new ArrayList<>();
         this.countOfInitAttr = 1;
     }
 
-    public Mash(ArrayList<Float> vertex, ArrayList<Float> colors){
+    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors){
         this.vertex = vertex;
         this.colors = colors;
         this.countOfInitAttr = 2;
     }
 
-    public Mash(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals){
+    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals){
         this.vertex = vertex;
         this.colors = colors;
         this.normals = normals;

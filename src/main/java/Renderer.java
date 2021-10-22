@@ -103,19 +103,9 @@ public class Renderer {
 
         InputValues.setMousePos(camera.getViewCenter().x, camera.getViewCenter().y);
 
-
-        ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-        for (int x = 0; x < 70; x++) {
-            for (int z = 0; z < 70; z++) {
-                chunks.add(new Chunk(new Vector3f(16 * x, 0, 16 * z)));
-            }
-        }
-
-        chunks.forEach(chunk -> chunk.generate());
-        for (Chunk e:chunks){
-            e.genBlocksMash();
-            MashRenderer.addObjectToDraw(e);
-        }
+        ChunksManager.setRenderDistance(20);
+        ChunksManager.generateChunks();
+        ChunksManager.addAllChunksToDraw();
 
         double start;
         double end;

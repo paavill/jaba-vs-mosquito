@@ -4,6 +4,7 @@ import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 import java.util.*;
+import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
@@ -141,14 +142,15 @@ public class Chunk {
             0.0f, 1.0f, 0.0f
     );
 
-    private static final Mash blockMash = new Mash(new ArrayList<>(blockVertex), new ArrayList<>(blockCollors), new ArrayList<>(blockNormales));
-    private static final Mash m = new Mash();
+    private static final Mesh blockMash = new Mesh(new ArrayList<>(blockVertex), new ArrayList<>(blockCollors), new ArrayList<>(blockNormales));
+    private static final Mesh m = new Mesh();
     private static final Block[] bl = {new Block((short) 0, m, false),
             new Block((short) 1, blockMash, false)};
 
     private final Vector3f position;
-    private final static int sizeXZ = 16;
-    private final static int sizeY = 256;
+    private final int sizeX;
+    private final int sizeZ;
+    private final int sizeY;
     private boolean changed = false;
 
     private int vertexCount = 0;
@@ -156,14 +158,18 @@ public class Chunk {
     //Начать предоставлять извне, поскольку хранить в чанке невыгодно
     //а статик не позволит сделать многопоточку (предоставлять при создании отдельного потока)
     //но пока статик, чтобы показать минимальную занимаемую память
-    private static Collection<Float> vertexesC = new ArrayList<>();
-    private static Collection<Float> colorsC = new ArrayList<>();
-    private static Collection<Float> normalsC = new ArrayList<>();
+    private Collection<Float> vertexesC = new ArrayList<>();
+    private Collection<Float> colorsC = new ArrayList<>();
+    private Collection<Float> normalsC = new ArrayList<>();
 
-    private short[][][] blocks = new short[sizeXZ][sizeY][sizeXZ];
+    private short[][][] blocks;
 
-    public Chunk(Vector3f position) {
+    public Chunk(Vector3f position, int sizeX, int sizeY, int sizeZ) {
         this.position = position;
+        this.sizeX = sizeX;
+        this.sizeY = sizeY;
+        this.sizeZ = sizeZ;
+        this.blocks = new short[sizeX][sizeY][sizeZ];
     }
 
     public Vector3f getPosition() {
@@ -179,13 +185,21 @@ public class Chunk {
         return this.changed;
     }
 
+    private float generatingFunction(int x, int z) {
+        return 60 + 60 * SimplexNoise.noise((x + this.position.x) / 30.f, (z + this.position.z) / 30.f);
+    }
+
+    private boolean generationPredicate(int x, int y, int z) {
+        return y < this.generatingFunction(x, z);
+    }
+
     public void generate() {
-        Random rand = new Random((long)glfwGetTime());
+        Random rand = new Random((long) glfwGetTime());
         FloatBuffer bf = BufferUtils.createFloatBuffer(16);
-        for (int x = 0; x < this.sizeXZ; x++) {
+        for (int x = 0; x < this.sizeX; x++) {
             for (int y = 0; y < this.sizeY; y++) {
-                for (int z = 0; z < this.sizeXZ; z++) {
-                    if (y < 60 + 60*SimplexNoise.noise((x+this.position.x)/30.f, (z+this.position.z)/30.f)) {
+                for (int z = 0; z < this.sizeZ; z++) {
+                    if (this.generationPredicate(x, y, z)) {
                         blocks[x][y][z] = 1;
                     } else {
                         blocks[x][y][z] = 0;
@@ -198,14 +212,13 @@ public class Chunk {
     private void addOffsetToAttributes(ArrayList<Float> vertex, int xOffset, int yOffset, int zOffset) {
         for (int i = 0; i < vertex.size(); i += 3) {
             vertex.set(i, vertex.get(i) + xOffset);
-            vertex.set(i+1, vertex.get(i+1) + yOffset);
-            vertex.set(i+2, vertex.get(i+2) + zOffset);
+            vertex.set(i + 1, vertex.get(i + 1) + yOffset);
+            vertex.set(i + 2, vertex.get(i + 2) + zOffset);
         }
-
     }
 
     private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
-        Mash currentMash;
+        Mesh currentMash;
         if (!bl[blocks[xOffset][yOffset][zOffset]].getSpecial()) {
             currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMash(sideOffset);
         } else {
@@ -223,7 +236,7 @@ public class Chunk {
     }
 
     private void addAttributesDataToCollections(int sideOffset, int xOffset, int yOffset, int zOffset) {
-        ArrayList<ArrayList<Float>> attributeArray = (ArrayList<ArrayList<Float>>)getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
+        ArrayList<ArrayList<Float>> attributeArray = (ArrayList<ArrayList<Float>>) getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
         vertexesC.addAll(attributeArray.get(0));
         colorsC.addAll(attributeArray.get(1));
         normalsC.addAll(attributeArray.get(2));
@@ -231,9 +244,9 @@ public class Chunk {
 
     //можно отрефакторить но пока лень
     public void genBlocksMash() {
-        for (int x = 0; x < this.sizeXZ; x++) {
+        for (int x = 0; x < this.sizeX; x++) {
             for (int y = 0; y < this.sizeY; y++) {
-                for (int z = 0; z < this.sizeXZ; z++) {
+                for (int z = 0; z < this.sizeZ; z++) {
                     double s = glfwGetTime();
                     if (bl[blocks[x][y][z]].getType() == 0) {
                         if (x != 0) {
@@ -257,6 +270,10 @@ public class Chunk {
                             if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
                                 this.addAttributesDataToCollections(2, x, y, z);
                             }
+                        } else {
+                            if (!this.generationPredicate(x - 1, y, z)) {
+                                this.addAttributesDataToCollections(2, x, y, z);
+                            }
                         }
                         if (y != 0) {
                             if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
@@ -265,6 +282,10 @@ public class Chunk {
                         }
                         if (z != 0) {
                             if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
+                                this.addAttributesDataToCollections(0, x, y, z);
+                            }
+                        } else {
+                            if (!this.generationPredicate(x, y, z - 1)) {
                                 this.addAttributesDataToCollections(0, x, y, z);
                             }
                         }

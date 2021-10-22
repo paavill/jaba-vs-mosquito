@@ -16,24 +16,24 @@ public class MashRenderer {
     private static int shaderProgram = 0;
     private static FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 
-    public static void setShaderProgram(int sh){
+    public static void setShaderProgram(int sh) {
         shaderProgram = sh;
     }
 
-    public static void addObjectToDraw(Chunk object){
+    public static void addObjectToDraw(Chunk object) {
         int VAO = getVAO(object);
         objectsToRender.put(object, VAO);
     }
 
-    private static float[] arrayWrapperToSimple(Float[] array){
+    private static float[] arrayWrapperToSimple(Float[] array) {
         float[] buff = new float[array.length];
-        for(int i = 0; i < buff.length; i++){
+        for (int i = 0; i < buff.length; i++) {
             buff[i] = array[i].floatValue();
         }
-        return  buff;
+        return buff;
     }
 
-    private static int getVAO(Chunk object){
+    private static int getVAO(Chunk object) {
         int[] VBOs = new int[3];
         glGenBuffers(VBOs);
         int VAO = glGenVertexArrays();
@@ -48,26 +48,26 @@ public class MashRenderer {
         object.getToDrawNormalsBuffer().clear();
 
         glBindVertexArray(VAO);
-        for(int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
             glBufferData(GL_ARRAY_BUFFER, attributeData[i], GL_STATIC_DRAW);
-            glVertexAttribPointer(i,3,GL_FLOAT,false,0, 0);
+            glVertexAttribPointer(i, 3, GL_FLOAT, false, 0, 0);
             glEnableVertexAttribArray(i);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
 
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER,0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         return VAO;
     }
 
-    public static void drawAll(){
-        glUseProgram(shaderProgram);
-        objectsToRender.forEach((o, v) -> draw(o,v));
-        glUseProgram(0);
+    public static void drawAll() {
+        //glUseProgram(shaderProgram);
+        objectsToRender.forEach((o, v) -> draw(o, v));
+        //glUseProgram(0);
     }
 
-    private static void draw(Chunk obj, int VAO){
+    private static void draw(Chunk obj, int VAO) {
         Matrix4f model = new Matrix4f();
         model.translate(obj.getPosition());
         fb.clear();
