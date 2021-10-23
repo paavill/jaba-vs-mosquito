@@ -1,4 +1,7 @@
+package main;
+
 import org.joml.Vector3f;
+import renderer.MeshRenderer;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +46,7 @@ public class ChunksManager implements Runnable {
     public static void addAllChunksToDraw(){
         for (int x = 0; x < ChunksManager.RENDER_DISTANCE; x++) {
             for (int z = 0; z < ChunksManager.RENDER_DISTANCE; z++) {
-                MashRenderer.addObjectToDraw(chunks.get(x).get(z));
+                MeshRenderer.addObjectToDraw(chunks.get(x).get(z));
             }
         }
     }

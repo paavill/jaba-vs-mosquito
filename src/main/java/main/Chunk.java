@@ -1,17 +1,17 @@
+package main;
+
+import game_objects.blocks.Block;
 import org.joml.SimplexNoise;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
+import renderer.Mesh;
 
 import java.nio.FloatBuffer;
 import java.util.*;
-import java.util.function.Function;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 public class Chunk {
-    //сделать загрузку из файла
-    //и вообще инициализация должна быть не здесь (абстракции...)
-
     static List<Float> blockVertex = List.of(
             -0.5f, -0.5f, -0.5f, //1 ближняя по z
             0.5f, -0.5f, -0.5f,
@@ -155,9 +155,6 @@ public class Chunk {
 
     private int vertexCount = 0;
 
-    //Начать предоставлять извне, поскольку хранить в чанке невыгодно
-    //а статик не позволит сделать многопоточку (предоставлять при создании отдельного потока)
-    //но пока статик, чтобы показать минимальную занимаемую память
     private Collection<Float> vertexesC = new ArrayList<>();
     private Collection<Float> colorsC = new ArrayList<>();
     private Collection<Float> normalsC = new ArrayList<>();
@@ -221,9 +218,9 @@ public class Chunk {
     private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
         Mesh currentMash;
         if (!bl[blocks[xOffset][yOffset][zOffset]].getSpecial()) {
-            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMash(sideOffset);
+            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMesh(sideOffset);
         } else {
-            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getMash();
+            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getMesh();
         }
         ArrayList<Float> vertexArray = currentMash.getVertex();
         ArrayList<Float> colorsArray = currentMash.getColors();

@@ -19,4 +19,4 @@ void main()
     Color = aColor;
     Normal = (model * vec4(aNormal, 1.0f)).xyz;
     aPos = position;
-};
+}

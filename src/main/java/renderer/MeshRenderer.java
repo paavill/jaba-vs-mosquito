@@ -1,3 +1,6 @@
+package renderer;
+
+import main.Chunk;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
 
@@ -10,8 +13,9 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL30.*;
 
-public class MashRenderer {
+public class MeshRenderer {
 
+    //TODO: УБРАТЬ ЭТО НАХУЙ
     private static Map<Chunk, Integer> objectsToRender = new HashMap<>();
     private static int shaderProgram = 0;
     private static FloatBuffer fb = BufferUtils.createFloatBuffer(16);

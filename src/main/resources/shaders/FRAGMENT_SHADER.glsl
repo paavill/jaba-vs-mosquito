@@ -18,11 +18,11 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * vec3(1.0f);
     vec3 result = (ambient + diffuse) * Color;
-   // if (mod(aPos.x,  0.5f) < 0.02f && mod(aPos.y,  0.5f) < 0.02f )
+   // if (mod(aPos.first,  0.5f) < 0.02f && mod(aPos.second,  0.5f) < 0.02f )
     //    result = vec3(0.f);
-   // if (mod(aPos.z,  0.5f) < 0.02f && mod(aPos.y,  0.5f) < 0.02f )
+   // if (mod(aPos.z,  0.5f) < 0.02f && mod(aPos.second,  0.5f) < 0.02f )
     //    result = vec3(0.f);
-   // if (mod(aPos.x,  0.5f) < 0.02f && mod(aPos.z,  0.5f) < 0.02f )
+   // if (mod(aPos.first,  0.5f) < 0.02f && mod(aPos.z,  0.5f) < 0.02f )
     //    result = vec3(0.f);
     FragColor = vec4(result, 1.0);
 }

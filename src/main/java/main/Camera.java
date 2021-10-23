@@ -1,10 +1,11 @@
+package main;
+
+import input.Controls;
+import input.KeyBindings;
 import org.joml.*;
 
 import java.lang.Math;
 
-import static org.lwjgl.glfw.GLFW.*;
-
-import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 
 public class Camera {
     private float yaw;
@@ -24,8 +25,6 @@ public class Camera {
     private float cameraMoveSpeed = 0;
     private float cameraViewPointSpeed = 0;
 
-    private Matrix4f lookAt = new Matrix4f();
-
     public Camera() {
         this.yaw = -90;
         this.pitch = 0;
@@ -42,26 +41,21 @@ public class Camera {
         this.cameraMoveSpeed = cameraMoveSpeed;
         this.cameraViewPointSpeed = cameraViewPointSpeed;
         this.currentPosition = position;
-        this.centerX = viewCenter.x;
-        this.centerY = viewCenter.y;
+        this.centerX = viewCenter.first;
+        this.centerY = viewCenter.second;
     }
 
-    private void generateMatrix() {
-        this.lookAt = new Matrix4f().lookAt(
+    public Matrix4f generateMatrix() {
+        return new Matrix4f().lookAt(
                 this.currentPosition,
                 this.currentViewPoint,
                 VERTICAL_CAMERA_VECTOR);
     }
 
-    public void update() {
-        move();
-        rotate();
-    }
-
-    public void rotate() {
-        Tuple<Float, Float> inputMouse = InputValues.getMousePos();
-        float xOffset = inputMouse.x - this.centerX;
-        float yOffset = this.centerY - inputMouse.y;
+    public void rotate(KeyBindings bindings) {
+        Tuple<Float, Float> inputMouse = bindings.getMousePosition();
+        float xOffset = inputMouse.first - this.centerX;
+        float yOffset = this.centerY - inputMouse.second;
 
         xOffset *= this.cameraViewPointSpeed;
         yOffset *= this.cameraViewPointSpeed;
@@ -80,30 +74,29 @@ public class Camera {
         direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
         this.currentFront = direction.normalize();
         this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
-        this.generateMatrix();
     }
 
-    public void move() {
-        if (InputValues.getStateByKey(GLFW_KEY_W)) {
+    public void move(KeyBindings bindings) {
+        if (bindings.getState(Controls.Forward)) {
             this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).normalize().mul(this.cameraMoveSpeed));
         }
-        if (InputValues.getStateByKey(GLFW_KEY_S)) {
+        if (bindings.getState(Controls.Back)) {
             this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).normalize().mul(this.cameraMoveSpeed).mul(-1));
         }
-        if (InputValues.getStateByKey(GLFW_KEY_A)) {
+        if (bindings.getState(Controls.Left)) {
             Quaternionf q = new Quaternionf();
             q.rotateAxis((float) Math.toRadians(90), 0, 1, 0);
             this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
-        if (InputValues.getStateByKey(GLFW_KEY_D)) {
+        if (bindings.getState(Controls.Right)) {
             Quaternionf q = new Quaternionf();
             q.rotateAxis((float) Math.toRadians(-90), 0, 1, 0);
             this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
-        if (InputValues.getStateByKey(GLFW_KEY_LEFT_SHIFT)) {
+        if (bindings.getState(Controls.Down)) {
             this.moveByVector(new Vector3f(0.f, -1.f, 0.f).mul(this.cameraMoveSpeed));
         }
-        if (InputValues.getStateByKey(GLFW_KEY_SPACE)) {
+        if (bindings.getState(Controls.Up)) {
             this.moveByVector(new Vector3f(0.f, 1.f, 0.f).mul(this.cameraMoveSpeed));
         }
     }
@@ -111,20 +104,10 @@ public class Camera {
     public void moveByVector(Vector3f movementVector) {
         this.currentPosition.add(movementVector);
         this.currentViewPoint.add(movementVector);
-        this.generateMatrix();
-    }
-
-    public void moveAbsolute(Vector3f position) {
-        this.currentPosition = position;
-        this.currentViewPoint = position.add(this.currentFront);
-        this.generateMatrix();
-    }
-
-    public Matrix4f getLookAt() {
-        return this.lookAt;
     }
 
     public Tuple<Float, Float> getViewCenter() {
-        return new Tuple<Float, Float>(this.centerX, this.centerY);
+        return new Tuple(this.centerX, this.centerY);
     }
 }
+

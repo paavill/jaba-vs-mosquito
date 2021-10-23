@@ -1,3 +1,5 @@
+package renderer;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -7,7 +9,7 @@ import static org.lwjgl.opengl.GL20.glCompileShader;
 
 public class GraphicResourceLoader {
     public static StringBuilder loadShaderSourceFromFile(String filePath) throws FileNotFoundException {
-        File shaderFile = new File(filePath);
+        File shaderFile = new File(GraphicResourceLoader.buildPath(filePath));
         Scanner scanner = new Scanner(shaderFile);
         StringBuilder str = new StringBuilder();
         while(scanner.hasNext()){
@@ -35,5 +37,9 @@ public class GraphicResourceLoader {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
         return shaderProgram;
+    }
+
+    private static String buildPath(String filePath) {
+        return GraphicResourceLoader.class.getClassLoader().getResource("shaders/" + filePath).getPath();
     }
 }
