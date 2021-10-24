@@ -24,6 +24,7 @@ public class KeyBindings {
         controls.put(Controls.Up,           GLFW_KEY_SPACE);
         controls.put(Controls.Down,         GLFW_KEY_LEFT_SHIFT);
         controls.put(Controls.SwitchCursor, GLFW_KEY_LEFT_CONTROL);
+        controls.put(Controls.CloseWindow,  GLFW_KEY_ESCAPE);
     }
 
     public Boolean getState(Controls control) {

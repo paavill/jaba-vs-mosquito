@@ -65,6 +65,7 @@ public class Game {
             inputManager.handleEvents();
             world.update();
             renderer.render(world);
+            window.update(bindings);
         }
     }
 }

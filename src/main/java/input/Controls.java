@@ -9,5 +9,6 @@ public enum Controls {
     Down,
 
     SwitchCursor,
+    CloseWindow
 }
 

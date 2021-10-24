@@ -1,5 +1,7 @@
 package main;
 
+import input.Controls;
+import input.KeyBindings;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.MemoryStack;
 
@@ -92,5 +94,16 @@ public class Window {
 
     public Tuple<Float, Float> getExtent() {
         return extent;
+    }
+
+    public void update(KeyBindings bindings){
+        if(bindings.getState(Controls.CloseWindow)){
+            glfwSetWindowShouldClose(this.windowDescriptor, true);
+        }
+        if(bindings.getState(Controls.SwitchCursor)){
+            this.showCursor();
+        } else {
+            this.hideCursor();
+        }
     }
 }
