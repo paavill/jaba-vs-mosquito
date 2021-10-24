@@ -20,7 +20,7 @@ public class Window {
     private Tuple extent;
 
     public Window(String title, Integer width, Integer height) {
-        this.extent = Tuple.from(width, height);
+        this.extent = new Tuple<Float, Float>(Float.valueOf(width), Float.valueOf(height));
 
         glfwDefaultWindowHints();
 
@@ -87,7 +87,7 @@ public class Window {
 
     private void resizeWindowCallback(long window, int width, int height) {
         glViewport(0, 0, width, height);
-        this.extent = Tuple.from(width, height);
+        this.extent = new Tuple(width, height);
     }
 
     public Tuple<Float, Float> getExtent() {

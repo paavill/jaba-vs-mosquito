@@ -53,27 +53,31 @@ public class Camera {
     }
 
     public void rotate(KeyBindings bindings) {
-        Tuple<Float, Float> inputMouse = bindings.getMousePosition();
-        float xOffset = inputMouse.first - this.centerX;
-        float yOffset = this.centerY - inputMouse.second;
+        if(!bindings.getState(Controls.SwitchCursor)) {
+            bindings.setCursorPosition(new Tuple<>(this.centerX, this.centerY));
+            Tuple<Float, Float> inputMouse = bindings.getMousePosition();
+            float xOffset = inputMouse.first - this.centerX;
+            float yOffset = this.centerY - inputMouse.second;
 
-        xOffset *= this.cameraViewPointSpeed;
-        yOffset *= this.cameraViewPointSpeed;
+            xOffset *= this.cameraViewPointSpeed;
+            yOffset *= this.cameraViewPointSpeed;
 
-        this.yaw += xOffset;
-        this.pitch += yOffset;
+            this.yaw += xOffset;
+            this.pitch += yOffset;
 
-        if (this.pitch > 89.0f)
-            this.pitch = 89.0f;
-        if (this.pitch < -89.0f)
-            this.pitch = -89.0f;
+            if (this.pitch > 89.0f)
+                this.pitch = 89.0f;
+            if (this.pitch < -89.0f)
+                this.pitch = -89.0f;
 
-        Vector3f direction = new Vector3f();
-        direction.x = (float) (Math.cos(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
-        direction.y = (float) Math.sin(Math.toRadians(this.pitch));
-        direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
-        this.currentFront = direction.normalize();
-        this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
+            Vector3f direction = new Vector3f();
+            direction.x = (float) (Math.cos(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
+            direction.y = (float) Math.sin(Math.toRadians(this.pitch));
+            direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
+            this.currentFront = direction.normalize();
+            this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
+        }
+        bindings.setMousePosition(new Tuple<>(this.centerX, this.centerY));
     }
 
     public void move(KeyBindings bindings) {

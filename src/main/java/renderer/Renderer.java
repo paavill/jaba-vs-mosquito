@@ -3,12 +3,14 @@ package renderer;
 import main.*;
 import org.joml.Matrix4f;
 import org.lwjgl.*;
+import org.lwjgl.opengl.GL;
 
 import java.io.*;
 import java.nio.*;
 
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class Renderer {
 
@@ -21,10 +23,10 @@ public class Renderer {
 
     public Renderer(Window window, Camera renderCamera) {
         this.window = window;
+        GL.createCapabilities();
         this.renderCamera = renderCamera;
         this.projection = new Matrix4f().perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 1000.f);
         glEnable(GL_DEPTH_TEST);
-
         try {
             this.chunkShaderProgram = GraphicResourceLoader.linkShaderProgram("VERTEX_SHADER.glsl", "FRAGMENT_SHADER.glsl");
         } catch (Exception ex) {

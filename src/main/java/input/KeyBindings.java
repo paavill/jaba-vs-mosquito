@@ -2,6 +2,8 @@ package input;
 
 import main.Tuple;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,5 +32,13 @@ public class KeyBindings {
 
     public Tuple getMousePosition() {
         return inputManager.getMousePosition();
+    }
+
+    public  void setMousePosition(Tuple<Float, Float> position){
+        this.inputManager.setMousePosition(position);
+    }
+
+    public void setCursorPosition(Tuple<Float, Float> position){
+        this.inputManager.setCursorPosition(position);
     }
 }

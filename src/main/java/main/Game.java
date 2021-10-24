@@ -48,7 +48,7 @@ public class Game {
         inputManager = new InputManager(window);
         bindings = new KeyBindings(inputManager);
 
-        Tuple<Float, Float> center = Tuple.from(window.getExtent().first / 2, window.getExtent().second / 2);
+        Tuple<Float, Float> center = new Tuple<Float, Float>(window.getExtent().first / 2,  window.getExtent().second / 2);
 
         camera = new Camera(
                 new Vector3f(0f, 0f, 3f),
@@ -57,8 +57,6 @@ public class Game {
 
         renderer = new Renderer(window, camera);
         world = new World(camera, bindings);
-
-        GL.createCapabilities();
     }
 
     private void loop() throws IOException, InterruptedException {
