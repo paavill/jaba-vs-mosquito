@@ -1,10 +1,12 @@
 package main;
 
+import game_objects.BlockType;
 import game_objects.blocks.Block;
 import org.joml.SimplexNoise;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import renderer.Mesh;
+import renderer.MeshSideType;
 
 import java.nio.FloatBuffer;
 import java.util.*;
@@ -144,8 +146,8 @@ public class Chunk {
 
     private static final Mesh blockMash = new Mesh(new ArrayList<>(blockVertex), new ArrayList<>(blockCollors), new ArrayList<>(blockNormales));
     private static final Mesh m = new Mesh();
-    private static final Block[] bl = {new Block((short) 0, m, false),
-            new Block((short) 1, blockMash, false)};
+    private static final Block[] bl = {new Block(BlockType.AIR, m, false),
+            new Block(BlockType.STONE, blockMash, false)};
 
     private final Vector3f position;
     private final int sizeX;
@@ -215,7 +217,7 @@ public class Chunk {
         }
     }
 
-    private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
+    private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(MeshSideType sideOffset, int xOffset, int yOffset, int zOffset) {
         Mesh currentMash;
         if (!bl[blocks[xOffset][yOffset][zOffset]].getSpecial()) {
             currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMesh(sideOffset);
@@ -233,7 +235,7 @@ public class Chunk {
         return result;
     }
 
-    private void addAttributesDataToCollections(int sideOffset, int xOffset, int yOffset, int zOffset) {
+    private void addAttributesDataToCollections(MeshSideType sideOffset, int xOffset, int yOffset, int zOffset) {
         ArrayList<ArrayList<Float>> attributeArray = (ArrayList<ArrayList<Float>>) getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
         vertexesC.addAll(attributeArray.get(0));
         colorsC.addAll(attributeArray.get(1));
@@ -246,55 +248,55 @@ public class Chunk {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeZ; z++) {
                     double s = glfwGetTime();
-                    if (bl[blocks[x][y][z]].getType() == 0) {
+                    if (bl[blocks[x][y][z]].getType().getId() == 0) {
                         if (x != 0) {
-                            if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
-                                this.addAttributesDataToCollections(3, x - 1, y, z);
+                            if (bl[blocks[x - 1][y][z]].getType().getId() != 0) {//1
+                                this.addAttributesDataToCollections(MeshSideType.RIGHT, x - 1, y, z);
                             }
                         }
                         if (y != 0) {
-                            if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
-                                this.addAttributesDataToCollections(5, x, y - 1, z);
+                            if (bl[blocks[x][y - 1][z]].getType().getId() != 0) {//2
+                                this.addAttributesDataToCollections(MeshSideType.TOP, x, y - 1, z);
                             }
                         }
                         if (z != 0) {
-                            if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
-                                this.addAttributesDataToCollections(1, x, y, z - 1);
+                            if (bl[blocks[x][y][z - 1]].getType().getId() != 0) {//3
+                                this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z - 1);
                             }
                         }
                     }
-                    if (bl[blocks[x][y][z]].getType() != 0) {
+                    if (bl[blocks[x][y][z]].getType().getId() != 0) {
                         if (x != 0) {
-                            if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
-                                this.addAttributesDataToCollections(2, x, y, z);
+                            if (bl[blocks[x - 1][y][z]].getType().getId() == 0) {//4
+                                this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
                             }
                             if (x == this.sizeX - 1) {
                                 if (!this.generationPredicate(x + 1, y, z)) {
-                                    this.addAttributesDataToCollections(3, x, y, z);
+                                    this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
                                 }
                             }
                         } else if (x == 0) {
                             if (!this.generationPredicate(x - 1, y, z)) {
-                                this.addAttributesDataToCollections(2, x, y, z);
+                                this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
                             }
                         }
                         if (y != 0) {
-                            if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
-                                this.addAttributesDataToCollections(3, x, y, z);
+                            if (bl[blocks[x][y - 1][z]].getType().getId() == 0) {//5
+                                this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
                             }
                         }
                         if (z != 0) {
-                            if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
-                                this.addAttributesDataToCollections(0, x, y, z);
+                            if (bl[blocks[x][y][z - 1]].getType().getId() == 0) {//6
+                                this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                             if (z == this.sizeZ - 1) {
                                 if (!this.generationPredicate(x, y, z+1)) {
-                                    this.addAttributesDataToCollections(1, x, y, z);
+                                    this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z);
                                 }
                             }
                         } else if (z == 0) {
                             if (!this.generationPredicate(x, y, z - 1)) {
-                                this.addAttributesDataToCollections(0, x, y, z);
+                                this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                         }
                     }

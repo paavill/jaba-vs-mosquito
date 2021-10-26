@@ -43,6 +43,7 @@ public class Camera {
         this.currentPosition = position;
         this.centerX = viewCenter.first;
         this.centerY = viewCenter.second;
+        this.rotationCalc();
     }
 
     public Matrix4f generateMatrix() {
@@ -70,14 +71,18 @@ public class Camera {
             if (this.pitch < -89.0f)
                 this.pitch = -89.0f;
 
-            Vector3f direction = new Vector3f();
-            direction.x = (float) (Math.cos(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
-            direction.y = (float) Math.sin(Math.toRadians(this.pitch));
-            direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
-            this.currentFront = direction.normalize();
-            this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
+           this.rotationCalc();
         }
         bindings.setMousePosition(new Tuple<>(this.centerX, this.centerY));
+    }
+
+    private void rotationCalc(){
+        Vector3f direction = new Vector3f();
+        direction.x = (float) (Math.cos(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
+        direction.y = (float) Math.sin(Math.toRadians(this.pitch));
+        direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
+        this.currentFront = direction.normalize();
+        this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
     }
 
     public void move(KeyBindings bindings) {

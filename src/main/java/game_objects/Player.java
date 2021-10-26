@@ -35,4 +35,8 @@ public class Player extends Entity implements IRenderable {
     private void updateRotation() {
         mainCamera.rotate(bindings);
     }
+
+    public void move(Vector3f vec){
+        mainCamera.moveByVector(vec);
+    }
 }

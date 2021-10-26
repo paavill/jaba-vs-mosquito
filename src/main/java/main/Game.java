@@ -53,7 +53,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 3f),
                 center,
-                -90.0f, 0.0f, 0.3f, 0.3f);
+                -90.0f, -40.0f, 0.3f, 0.3f);
 
         renderer = new Renderer(window, camera);
         world = new World(camera, bindings);
