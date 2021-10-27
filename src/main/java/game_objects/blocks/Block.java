@@ -1,6 +1,5 @@
 package game_objects.blocks;
 
-import game_objects.BlockType;
 import renderer.Mesh;
 import renderer.MeshSideType;
 import renderer.SideDataGenerator;
@@ -24,7 +23,7 @@ public class Block {
            this.sides = new HashMap<>();
         } else {
             this.sideDataGenerator = new SideDataGenerator(this.floatValuesOnSide);
-            this.sides = this.sideDataGenerator.genSidesMeshes(this.mesh);
+            this.sides = this.sideDataGenerator.genSidesMeshes(this.mesh, this.type);
         }
     }
 
@@ -40,7 +39,8 @@ public class Block {
         ArrayList<Float> v = new ArrayList<Float>(this.mesh.getVertex());
         ArrayList<Float> c = new ArrayList<Float>(this.mesh.getColors());
         ArrayList<Float> n = new ArrayList<Float>(this.mesh.getNormals());
-        return new Mesh(v, c, n);
+        ArrayList<ArrayList<Float>> t = new ArrayList<ArrayList<Float>>(this.mesh.getTextureCoords());
+        return new Mesh(v, c, n, t);
     }
 
     public boolean getSpecial(){

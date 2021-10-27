@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL;
 import renderer.Renderer;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -56,7 +57,9 @@ public class Game {
                 -90.0f, -40.0f, 0.3f, 0.3f);
 
         renderer = new Renderer(window, camera);
+        Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
         world = new World(camera, bindings);
+
     }
 
     private void loop() throws IOException, InterruptedException {

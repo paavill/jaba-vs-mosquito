@@ -9,7 +9,9 @@ public class Mesh {
     private final ArrayList<Float> vertex;
     private final ArrayList<Float> colors;
     private final ArrayList<Float> normals;
-    private final ArrayList<Float> textureCoords;
+    //Внешний ArrayList хранит коллекции, в которых лежат координаты для
+    //каждой ячейки атласа
+    private final ArrayList<ArrayList<Float>> textureCoords;
 
     private int countOfInitAttr;
 
@@ -18,7 +20,7 @@ public class Mesh {
         this.vertex = new ArrayList<>();
         this.colors = this.vertex;
         this.normals = this.colors;
-        this.textureCoords = this.normals;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 0;
     }
 
@@ -26,7 +28,7 @@ public class Mesh {
         this.vertex = vertex;
         this.colors = new ArrayList<>();
         this.normals = this.colors;
-        this.textureCoords = this.normals;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 1;
     }
 
@@ -34,7 +36,7 @@ public class Mesh {
         this.vertex = vertex;
         this.colors = colors;
         this.normals = new ArrayList<>();
-        this.textureCoords = this.normals;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 2;
     }
 
@@ -42,11 +44,11 @@ public class Mesh {
         this.vertex = vertex;
         this.colors = colors;
         this.normals = normals;
-        this.textureCoords = this.normals;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 3;
     }
 
-    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals, ArrayList<Float> textureCoords) {
+    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals, ArrayList<ArrayList<Float>> textureCoords) {
         this.vertex = vertex;
         this.colors = colors;
         this.normals = normals;
@@ -78,7 +80,7 @@ public class Mesh {
         return this.colors;
     }
 
-    public ArrayList<Float> getTextureCoords() {
+    public ArrayList<ArrayList<Float>> getTextureCoords() {
         return this.textureCoords;
     }
 

@@ -1,6 +1,7 @@
 package renderer;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.system.MemoryStack;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -10,12 +11,11 @@ import java.util.Scanner;
 
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL20.glCompileShader;
-import static org.lwjgl.stb.STBImage.stbi_load;
-import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
+import static org.lwjgl.stb.STBImage.*;
 
 public class GraphicResourceLoader {
-    private static StringBuilder loadShaderSourceFromFile(String filePath) throws FileNotFoundException {
-        File shaderFile = new File(GraphicResourceLoader.buildPath(filePath));
+    private static StringBuilder loadShaderSourceFromFile(String filePath, String folderPath) throws FileNotFoundException {
+        File shaderFile = new File(GraphicResourceLoader.buildPath(filePath, folderPath));
         Scanner scanner = new Scanner(shaderFile);
         StringBuilder str = new StringBuilder();
         while(scanner.hasNext()){
@@ -31,9 +31,9 @@ public class GraphicResourceLoader {
         return shader;
     }
 
-    public static int linkShaderProgram(String vertexShaderFilePath, String fragmentShaderFilePath) throws FileNotFoundException {
-        CharSequence sourceVertexShader = GraphicResourceLoader.loadShaderSourceFromFile(vertexShaderFilePath);
-        CharSequence sourceFragmentShader = GraphicResourceLoader.loadShaderSourceFromFile(fragmentShaderFilePath);
+    public static int linkShaderProgram(String vertexShaderFilePath, String fragmentShaderFilePath, String folderPath) throws FileNotFoundException {
+        CharSequence sourceVertexShader = GraphicResourceLoader.loadShaderSourceFromFile(vertexShaderFilePath, folderPath);
+        CharSequence sourceFragmentShader = GraphicResourceLoader.loadShaderSourceFromFile(fragmentShaderFilePath, folderPath);
         int vertexShader = GraphicResourceLoader.compileShader(sourceVertexShader, GL_VERTEX_SHADER);
         int fragmentShader = GraphicResourceLoader.compileShader(sourceFragmentShader, GL_FRAGMENT_SHADER);
         int shaderProgram = glCreateProgram();
@@ -45,22 +45,33 @@ public class GraphicResourceLoader {
         return shaderProgram;
     }
     //Доделать загрузку текстур
-    public void loadTexture(String path){
-        IntBuffer width = BufferUtils.createIntBuffer(1);
-        IntBuffer height = BufferUtils.createIntBuffer(1);
-        IntBuffer components = BufferUtils.createIntBuffer(1);
-        //stb
-        //stbi_load("org/lwjgl/demo/opengl/textures/environment.jpg", width, height)
-        //ByteBuffer data = stbi_load_from_memory(ioRe ioResourceToByteBuffer("org/lwjgl/demo/opengl/textures/environment.jpg", 1024), width, height, components, 4);
-        int id = glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width.get(), height.get(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        //stbi_image_free(data);
+    public static Texture loadTexture(String path, String folderPath){
+        ByteBuffer image;
+        int width, height;
+        String filePath = buildPath(path, folderPath);
+        File f = new File(filePath);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            /* Prepare image buffers */
+            IntBuffer w = stack.mallocInt(1);
+            IntBuffer h = stack.mallocInt(1);
+            IntBuffer comp = stack.mallocInt(1);
+
+            /* Load image */
+            stbi_set_flip_vertically_on_load(true);
+            image = stbi_load(f.getPath(), w, h, comp, 4);
+            if (image == null) {
+                throw new RuntimeException("Failed to load a texture file!"+"!!!!" + stbi_failure_reason());
+            }
+
+            /* Get width and height of image */
+            width = w.get();
+            height = h.get();
+        }
+        Texture texture = new Texture(width, height, image);
+        return texture;
     }
 
-    private static String buildPath(String filePath) {
-        return GraphicResourceLoader.class.getClassLoader().getResource("shaders/" + filePath).getPath();
+    private static String buildPath(String filePath, String folderPath) {
+        return GraphicResourceLoader.class.getClassLoader().getResource(folderPath + filePath).getPath();
     }
 }
