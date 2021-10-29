@@ -79,12 +79,22 @@ public class Chunk {
                         blocks[x][y][z] = BlockType.STONE;
                     } else {
                         blocks[x][y][z] = BlockType.AIR;
-                        if(y != 0){
-                            if(blocks[x][y-1][z] != BlockType.AIR) {
+                        if (y != 0) {
+                            if (blocks[x][y - 1][z] != BlockType.AIR) {
                                 blocks[x][y - 1][z] = BlockType.GRASS;
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    public void setAllBloksType(BlockType type) {
+        for (int x = 0; x < this.sizeX; x++) {
+            for (int y = 0; y < this.sizeY; y++) {
+                for (int z = 0; z < this.sizeZ; z++) {
+                    blocks[x][y][z] = type;
                 }
             }
         }
@@ -175,7 +185,7 @@ public class Chunk {
                                 this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                             if (z == this.sizeZ - 1) {
-                                if (!this.generationPredicate(x, y, z+1)) {
+                                if (!this.generationPredicate(x, y, z + 1)) {
                                     this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z);
                                 }
                             }
