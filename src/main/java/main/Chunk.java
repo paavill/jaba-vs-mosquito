@@ -1,10 +1,14 @@
 package main;
 
+import game_objects.blocks.BlockType;
 import game_objects.blocks.Block;
 import org.joml.SimplexNoise;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
+import renderer.GraphicResourceLoader;
 import renderer.Mesh;
+import renderer.MeshSideType;
+import renderer.Texture;
 
 import java.nio.FloatBuffer;
 import java.util.*;
@@ -12,140 +16,6 @@ import java.util.*;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 public class Chunk {
-    static List<Float> blockVertex = List.of(
-            -0.5f, -0.5f, -0.5f, //1 ближняя по z
-            0.5f, -0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            -0.5f, 0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-
-            -0.5f, -0.5f, 0.5f, //2 дяльняя по z
-            0.5f, -0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, -0.5f, 0.5f,
-
-            -0.5f, 0.5f, 0.5f, //3 лево
-            -0.5f, 0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-
-            0.5f, 0.5f, 0.5f,  //4 право
-            0.5f, 0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-
-            -0.5f, -0.5f, -0.5f,  //5 низ
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f,
-            -0.5f, -0.5f, 0.5f,
-            -0.5f, -0.5f, -0.5f,
-
-            -0.5f, 0.5f, -0.5f,  //6 верх
-            0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, -0.5f);
-    static List<Float> blockCollors = List.of(
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-
-            0.6f, 0.6f, 0.6f,
-            0.6f, 0.6f, 0.6f,
-            0.6f, 0.6f, 0.6f,
-            0.6f, 0.6f, 0.6f,
-            0.6f, 0.6f, 0.6f,
-            0.6f, 0.6f, 0.6f,
-
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-            0.4f, 0.4f, 0.4f,
-
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f
-    );
-
-    static List<Float> blockNormales = List.of(
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f
-    );
-
-    private static final Mesh blockMash = new Mesh(new ArrayList<>(blockVertex), new ArrayList<>(blockCollors), new ArrayList<>(blockNormales));
-    private static final Mesh m = new Mesh();
-    private static final Block[] bl = {new Block((short) 0, m, false),
-            new Block((short) 1, blockMash, false)};
 
     private final Vector3f position;
     private final int sizeX;
@@ -158,15 +28,22 @@ public class Chunk {
     private Collection<Float> vertexesC = new ArrayList<>();
     private Collection<Float> colorsC = new ArrayList<>();
     private Collection<Float> normalsC = new ArrayList<>();
+    private Collection<Float> texC = new ArrayList<>();
 
-    private short[][][] blocks;
+    private static HashMap<BlockType, Block> blocksModels;
+
+    private BlockType[][][] blocks;
+
+    public static void setBlocksModels(HashMap<BlockType, Block> blocks) {
+        blocksModels = blocks;
+    }
 
     public Chunk(Vector3f position, int sizeX, int sizeY, int sizeZ) {
         this.position = position;
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.sizeZ = sizeZ;
-        this.blocks = new short[sizeX][sizeY][sizeZ];
+        this.blocks = new BlockType[sizeX][sizeY][sizeZ];
     }
 
     public Vector3f getPosition() {
@@ -183,7 +60,8 @@ public class Chunk {
     }
 
     private float generatingFunction(int x, int z) {
-        return 70 + 10 * SimplexNoise.noise((x + this.position.x) / 90.f, (z + this.position.z) / 70.f) +
+        SimplexNoise s = new SimplexNoise();
+        return 70 + 20 * SimplexNoise.noise((x + this.position.x) / 90.f, (z + this.position.z) / 70.f) +
                 60 * SimplexNoise.noise((x + this.position.x) / 400.f, (z + this.position.z) / 400.f);
     }
 
@@ -198,10 +76,25 @@ public class Chunk {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeZ; z++) {
                     if (this.generationPredicate(x, y, z)) {
-                        blocks[x][y][z] = 1;
+                        blocks[x][y][z] = BlockType.STONE;
                     } else {
-                        blocks[x][y][z] = 0;
+                        blocks[x][y][z] = BlockType.AIR;
+                        if (y != 0) {
+                            if (blocks[x][y - 1][z] != BlockType.AIR) {
+                                blocks[x][y - 1][z] = BlockType.GRASS;
+                            }
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    public void setAllBloksType(BlockType type) {
+        for (int x = 0; x < this.sizeX; x++) {
+            for (int y = 0; y < this.sizeY; y++) {
+                for (int z = 0; z < this.sizeZ; z++) {
+                    blocks[x][y][z] = type;
                 }
             }
         }
@@ -215,29 +108,33 @@ public class Chunk {
         }
     }
 
-    private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(int sideOffset, int xOffset, int yOffset, int zOffset) {
+    private Collection<ArrayList<Float>> getVisibleSidesOfBlocks(MeshSideType sideOffset, int xOffset, int yOffset, int zOffset) {
         Mesh currentMash;
-        if (!bl[blocks[xOffset][yOffset][zOffset]].getSpecial()) {
-            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getSideMesh(sideOffset);
+        Block currentBlock = Chunk.blocksModels.get(blocks[xOffset][yOffset][zOffset]);
+        if (!currentBlock.getSpecial()) {
+            currentMash = currentBlock.getSideMesh(sideOffset);
         } else {
-            currentMash = bl[blocks[xOffset][yOffset][zOffset]].getMesh();
+            currentMash = currentBlock.getMesh();
         }
         ArrayList<Float> vertexArray = currentMash.getVertex();
         ArrayList<Float> colorsArray = currentMash.getColors();
         ArrayList<Float> normalsArray = currentMash.getNormals();
+        ArrayList<ArrayList<Float>> tex = currentMash.getTextureCoords();
         this.addOffsetToAttributes(vertexArray, xOffset, yOffset, zOffset);
         Collection<ArrayList<Float>> result = new ArrayList<ArrayList<Float>>();
         result.add(vertexArray);
         result.add(colorsArray);
         result.add(normalsArray);
+        result.add(tex.get(0));
         return result;
     }
 
-    private void addAttributesDataToCollections(int sideOffset, int xOffset, int yOffset, int zOffset) {
+    private void addAttributesDataToCollections(MeshSideType sideOffset, int xOffset, int yOffset, int zOffset) {
         ArrayList<ArrayList<Float>> attributeArray = (ArrayList<ArrayList<Float>>) getVisibleSidesOfBlocks(sideOffset, xOffset, yOffset, zOffset);
         vertexesC.addAll(attributeArray.get(0));
         colorsC.addAll(attributeArray.get(1));
         normalsC.addAll(attributeArray.get(2));
+        texC.addAll(attributeArray.get(3));
     }
 
     //можно отрефакторить но пока лень
@@ -246,55 +143,55 @@ public class Chunk {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeZ; z++) {
                     double s = glfwGetTime();
-                    if (bl[blocks[x][y][z]].getType() == 0) {
+                    if (blocks[x][y][z].getId() == 0) {
                         if (x != 0) {
-                            if (bl[blocks[x - 1][y][z]].getType() != 0) {//1
-                                this.addAttributesDataToCollections(3, x - 1, y, z);
+                            if (blocks[x - 1][y][z].getId() != 0) {//1
+                                this.addAttributesDataToCollections(MeshSideType.RIGHT, x - 1, y, z);
                             }
                         }
                         if (y != 0) {
-                            if (bl[blocks[x][y - 1][z]].getType() != 0) {//2
-                                this.addAttributesDataToCollections(5, x, y - 1, z);
+                            if (blocks[x][y - 1][z].getId() != 0) {//2
+                                this.addAttributesDataToCollections(MeshSideType.TOP, x, y - 1, z);
                             }
                         }
                         if (z != 0) {
-                            if (bl[blocks[x][y][z - 1]].getType() != 0) {//3
-                                this.addAttributesDataToCollections(1, x, y, z - 1);
+                            if (blocks[x][y][z - 1].getId() != 0) {//3
+                                this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z - 1);
                             }
                         }
                     }
-                    if (bl[blocks[x][y][z]].getType() != 0) {
+                    if (blocks[x][y][z].getId() != 0) {
                         if (x != 0) {
-                            if (bl[blocks[x - 1][y][z]].getType() == 0) {//4
-                                this.addAttributesDataToCollections(2, x, y, z);
+                            if (blocks[x - 1][y][z].getId() == 0) {//4
+                                this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
                             }
                             if (x == this.sizeX - 1) {
                                 if (!this.generationPredicate(x + 1, y, z)) {
-                                    this.addAttributesDataToCollections(3, x, y, z);
+                                    this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
                                 }
                             }
                         } else if (x == 0) {
                             if (!this.generationPredicate(x - 1, y, z)) {
-                                this.addAttributesDataToCollections(2, x, y, z);
+                                this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
                             }
                         }
                         if (y != 0) {
-                            if (bl[blocks[x][y - 1][z]].getType() == 0) {//5
-                                this.addAttributesDataToCollections(3, x, y, z);
+                            if (blocks[x][y - 1][z].getId() == 0) {//5
+                                this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
                             }
                         }
                         if (z != 0) {
-                            if (bl[blocks[x][y][z - 1]].getType() == 0) {//6
-                                this.addAttributesDataToCollections(0, x, y, z);
+                            if (blocks[x][y][z - 1].getId() == 0) {//6
+                                this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                             if (z == this.sizeZ - 1) {
-                                if (!this.generationPredicate(x, y, z+1)) {
-                                    this.addAttributesDataToCollections(1, x, y, z);
+                                if (!this.generationPredicate(x, y, z + 1)) {
+                                    this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z);
                                 }
                             }
                         } else if (z == 0) {
                             if (!this.generationPredicate(x, y, z - 1)) {
-                                this.addAttributesDataToCollections(0, x, y, z);
+                                this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                         }
                     }
@@ -314,6 +211,10 @@ public class Chunk {
 
     public Collection<Float> getToDrawVertexBuffer() {
         return this.vertexesC;
+    }
+
+    public Collection<Float> getTexC() {
+        return texC;
     }
 
     public int getVertexCount() {

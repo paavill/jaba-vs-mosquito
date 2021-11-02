@@ -38,14 +38,15 @@ public class MeshRenderer {
     }
 
     private static int getVAO(Chunk object) {
-        int[] VBOs = new int[3];
+        int[] VBOs = new int[4];
         glGenBuffers(VBOs);
         int VAO = glGenVertexArrays();
         Float[] tempArray = new Float[0];
         float[][] attributeData = {
                 arrayWrapperToSimple(object.getToDrawVertexBuffer().toArray(tempArray)),
                 arrayWrapperToSimple(object.getToDrawColorsBuffer().toArray(tempArray)),
-                arrayWrapperToSimple(object.getToDrawNormalsBuffer().toArray(tempArray))
+                arrayWrapperToSimple(object.getToDrawNormalsBuffer().toArray(tempArray)),
+                arrayWrapperToSimple(object.getTexC().toArray(tempArray))
         };
         object.getToDrawVertexBuffer().clear();
         object.getToDrawColorsBuffer().clear();
@@ -59,6 +60,11 @@ public class MeshRenderer {
             glEnableVertexAttribArray(i);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
+        glBindBuffer(GL_ARRAY_BUFFER, VBOs[3]);
+        glBufferData(GL_ARRAY_BUFFER, attributeData[3], GL_STATIC_DRAW);
+        glVertexAttribPointer(3, 2, GL_FLOAT, false, 0, 0);
+        glEnableVertexAttribArray(3);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);

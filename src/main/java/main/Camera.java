@@ -43,6 +43,7 @@ public class Camera {
         this.currentPosition = position;
         this.centerX = viewCenter.first;
         this.centerY = viewCenter.second;
+        this.rotationCalc();
     }
 
     public Matrix4f generateMatrix() {
@@ -70,14 +71,18 @@ public class Camera {
             if (this.pitch < -89.0f)
                 this.pitch = -89.0f;
 
-            Vector3f direction = new Vector3f();
-            direction.x = (float) (Math.cos(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
-            direction.y = (float) Math.sin(Math.toRadians(this.pitch));
-            direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
-            this.currentFront = direction.normalize();
-            this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
+           this.rotationCalc();
         }
         bindings.setMousePosition(new Tuple<>(this.centerX, this.centerY));
+    }
+
+    private void rotationCalc(){
+        Vector3f direction = new Vector3f();
+        direction.x = (float) (Math.cos(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
+        direction.y = (float) Math.sin(Math.toRadians(this.pitch));
+        direction.z = (float) (Math.sin(Math.toRadians(this.yaw)) * Math.cos(Math.toRadians(this.pitch)));
+        this.currentFront = direction.normalize();
+        this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
     }
 
     public void move(KeyBindings bindings) {
@@ -90,12 +95,16 @@ public class Camera {
         if (bindings.getState(Controls.Left)) {
             Quaternionf q = new Quaternionf();
             q.rotateAxis((float) Math.toRadians(90), 0, 1, 0);
-            this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).rotate(q).normalize().mul(this.cameraMoveSpeed));
+            Vector3f vec = new Vector3f(this.currentViewPoint).sub(this.currentPosition);
+            vec.y = 0;
+            this.moveByVector(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Right)) {
             Quaternionf q = new Quaternionf();
             q.rotateAxis((float) Math.toRadians(-90), 0, 1, 0);
-            this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).rotate(q).normalize().mul(this.cameraMoveSpeed));
+            Vector3f vec = new Vector3f(this.currentViewPoint).sub(this.currentPosition);
+            vec.y = 0;
+            this.moveByVector(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Down)) {
             this.moveByVector(new Vector3f(0.f, -1.f, 0.f).mul(this.cameraMoveSpeed));

@@ -20,6 +20,7 @@ public class Renderer {
     private final Matrix4f projection;
 
     private int chunkShaderProgram;
+    private Texture texture;
 
     public Renderer(Window window, Camera renderCamera) {
         this.window = window;
@@ -28,7 +29,10 @@ public class Renderer {
         this.projection = new Matrix4f().perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 1000.f);
         glEnable(GL_DEPTH_TEST);
         try {
-            this.chunkShaderProgram = GraphicResourceLoader.linkShaderProgram("VERTEX_SHADER.glsl", "FRAGMENT_SHADER.glsl");
+            this.chunkShaderProgram = GraphicResourceLoader.linkShaderProgram("VERTEX_SHADER.glsl", "FRAGMENT_SHADER.glsl", "shaders/");
+            //this.texture = GraphicResourceLoader.loadTexture("blocks.png", "/");
+            //создание текстурного астласа должно быть здесь, но в силу плохой архитекруты
+            //загрузки текстур (со стороны paavill), создание пока что не тут.
         } catch (Exception ex) {
 
         }
@@ -53,6 +57,7 @@ public class Renderer {
         atrPos = glGetUniformLocation(chunkShaderProgram, "lightPos");
         glUniform3f(atrPos, 3, 20, 3);
 
+        BlocksModelsInitializer.getTextureAtlas().bind();
         MeshRenderer.drawAll();
 
         glUseProgram(0);

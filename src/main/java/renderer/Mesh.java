@@ -1,68 +1,87 @@
 package renderer;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class Mesh {
-    private ArrayList<Float> vertex;
-    private ArrayList<Float> colors;
-    private ArrayList<Float> normals;
+    private final ArrayList<Float> vertex;
+    private final ArrayList<Float> colors;
+    private final ArrayList<Float> normals;
+    //Внешний ArrayList хранит коллекции, в которых лежат координаты для
+    //каждой ячейки атласа
+    private final ArrayList<ArrayList<Float>> textureCoords;
 
     private int countOfInitAttr;
 
-    public Mesh(){
+    public Mesh() {
         super();
         this.vertex = new ArrayList<>();
         this.colors = this.vertex;
         this.normals = this.colors;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 0;
     }
 
-    public Mesh(ArrayList<Float> vertex){
+    public Mesh(ArrayList<Float> vertex) {
         this.vertex = vertex;
         this.colors = new ArrayList<>();
+        this.normals = this.colors;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 1;
     }
 
-    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors){
+    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors) {
         this.vertex = vertex;
         this.colors = colors;
+        this.normals = new ArrayList<>();
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 2;
     }
 
-    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals){
+    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals) {
         this.vertex = vertex;
         this.colors = colors;
         this.normals = normals;
+        this.textureCoords = new ArrayList<>();
         this.countOfInitAttr = 3;
     }
 
-    public int getCountOfInitAttribute(){
-        return  this.countOfInitAttr;
+    public Mesh(ArrayList<Float> vertex, ArrayList<Float> colors, ArrayList<Float> normals, ArrayList<ArrayList<Float>> textureCoords) {
+        this.vertex = vertex;
+        this.colors = colors;
+        this.normals = normals;
+        this.textureCoords = textureCoords;
+        this.countOfInitAttr = 4;
     }
 
-    public ArrayList<Float> getVertex(){
+    public Mesh(Mesh mesh) {
+        this.vertex = new ArrayList<>(mesh.vertex);
+        this.colors = new ArrayList<>(mesh.colors);
+        this.normals = new ArrayList<>(mesh.normals);
+        this.textureCoords = new ArrayList<>(mesh.textureCoords);
+        this.countOfInitAttr = mesh.countOfInitAttr;
+    }
+
+    public int getCountOfInitAttribute() {
+        return this.countOfInitAttr;
+    }
+
+    public ArrayList<Float> getVertex() {
         return this.vertex;
     }
 
-
-    public int getVertexCount(){
-        return this.vertex.size()/3;
-    }
-
-    public ArrayList<Float> getColors(){
+    public ArrayList<Float> getColors() {
         return this.colors;
     }
 
-    public int getColorsCount(){
-        return this.colors.size()/3;
-    }
-
-    public ArrayList<Float> getNormals(){
+    public ArrayList<Float> getNormals() {
         return this.colors;
     }
 
-    public int getNormalsCount(){
-        return this.colors.size()/3;
+    public ArrayList<ArrayList<Float>> getTextureCoords() {
+        return this.textureCoords;
     }
+
 }
