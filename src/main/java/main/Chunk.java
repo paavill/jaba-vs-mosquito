@@ -138,7 +138,7 @@ public class Chunk {
     }
 
     //можно отрефакторить но пока лень
-    public void genBlocksMash() {
+    public void genBlocksMash(Chunk left, Chunk right, Chunk far, Chunk near) {
         for (int x = 0; x < this.sizeX; x++) {
             for (int y = 0; y < this.sizeY; y++) {
                 for (int z = 0; z < this.sizeZ; z++) {
@@ -166,18 +166,18 @@ public class Chunk {
                                 this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
                             }
                             if (x == this.sizeX - 1) {
-                                if (!this.generationPredicate(x + 1, y, z)) {
+                                if (right.getBlocks()[0][y][z].getId() == BlockType.AIR.getId()) {
                                     this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
                                 }
                             }
                         } else if (x == 0) {
-                            if (!this.generationPredicate(x - 1, y, z)) {
+                            if (left.getBlocks()[this.sizeX - 1][y][z].getId() == BlockType.AIR.getId()) {
                                 this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
                             }
                         }
                         if (y != 0) {
                             if (blocks[x][y - 1][z].getId() == 0) {//5
-                                this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
+                                this.addAttributesDataToCollections(MeshSideType.BOTTOM, x, y, z);
                             }
                         }
                         if (z != 0) {
@@ -185,12 +185,12 @@ public class Chunk {
                                 this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                             if (z == this.sizeZ - 1) {
-                                if (!this.generationPredicate(x, y, z + 1)) {
+                                if (near.getBlocks()[x][y][0].getId() == BlockType.AIR.getId()) {
                                     this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z);
                                 }
                             }
                         } else if (z == 0) {
-                            if (!this.generationPredicate(x, y, z - 1)) {
+                            if (far.getBlocks()[x][y][this.sizeZ - 1].getId() == BlockType.AIR.getId()) {
                                 this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
                             }
                         }
@@ -201,8 +201,12 @@ public class Chunk {
         this.vertexCount = this.vertexesC.size() / 3;
     }
 
+    public BlockType[][][] getBlocks() {
+        return blocks;
+    }
+
     public Collection<Float> getToDrawColorsBuffer() {
-        return this.vertexesC;
+        return this.colorsC;
     }
 
     public Collection<Float> getToDrawNormalsBuffer() {

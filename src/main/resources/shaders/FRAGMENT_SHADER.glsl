@@ -15,10 +15,16 @@ void main()
     float ambientStrength = 2.0;
     vec3 ambient = ambientStrength * vec3(1.0f);
 
-    vec3 norm = normalize(Normal).xyz;
+    vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(1.0f);
+
+    float distance    = length(lightPos - FragPos);
+    //добавить названия для коэффициентов
+    float attenuation = 1.0 / (1.0f + 0.0002f * distance +
+        		    0.007f * (distance * distance));
+
+    float diff = max(dot(norm, lightDir), 0.0)*attenuation;
+    vec3 diffuse = diff * vec3(4.0f);
     vec3 result = (ambient + diffuse) * Color;
    // if (mod(aPos.first,  0.5f) < 0.02f && mod(aPos.second,  0.5f) < 0.02f )
     //    result = vec3(0.f);

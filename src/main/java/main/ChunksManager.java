@@ -61,10 +61,25 @@ public class ChunksManager {
                 final int _z = z;
                 Runnable runnable = () -> {
                     chunks.get(_x).get(_z).generate();
-                    if(_x == 0 && _z == 1){
-                        this.getChunkByGlobalCoords(0.23f, 16.f).setAllBloksType(BlockType.AIR);
+                    if(_x == 2 && _z == 2){
+                        this.getChunkByGlobalCoords(32.f, 32.f).setAllBloksType(BlockType.AIR);
                     }
-                    chunks.get(_x).get(_z).genBlocksMash();
+                };
+                threadPool.execute(runnable);
+            }
+        }
+
+        for (int x = 0; x < this.renderDistance; x++) {
+            for (int z = 0; z < this.renderDistance; z++) {
+                final int _x = x;
+                final int _z = z;
+                Runnable runnable = () -> {
+
+                    if(_x != 0 && _x != this.renderDistance - 1 && _z != 0 && _z != this.renderDistance -1){
+                        chunks.get(_x).get(_z).genBlocksMash(chunks.get(_x - 1).get(_z),
+                                chunks.get(_x + 1).get(_z),
+                                chunks.get(_x).get(_z - 1), chunks.get(_x).get(_z + 1));
+                    }
                 };
                 threadPool.execute(runnable);
             }

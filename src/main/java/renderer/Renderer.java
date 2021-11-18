@@ -2,6 +2,7 @@ package renderer;
 
 import main.*;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.*;
 import org.lwjgl.opengl.GL;
 
@@ -55,7 +56,8 @@ public class Renderer {
         glUniformMatrix4fv(atrPos, false, projection.get(fb));
 
         atrPos = glGetUniformLocation(chunkShaderProgram, "lightPos");
-        glUniform3f(atrPos, 3, 20, 3);
+        Vector3f vec = renderCamera.getCurrentPosition();
+        glUniform3f(atrPos, vec.x, vec.y, vec.z);
 
         BlocksModelsInitializer.getTextureAtlas().bind();
         MeshRenderer.drawAll();

@@ -77,7 +77,7 @@ public class Mesh {
     }
 
     public ArrayList<Float> getNormals() {
-        return this.colors;
+        return this.normals;
     }
 
     public ArrayList<ArrayList<Float>> getTextureCoords() {

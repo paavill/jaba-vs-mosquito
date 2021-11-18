@@ -51,6 +51,7 @@ public class MeshRenderer {
         object.getToDrawVertexBuffer().clear();
         object.getToDrawColorsBuffer().clear();
         object.getToDrawNormalsBuffer().clear();
+        object.getTexC().clear();
 
         glBindVertexArray(VAO);
         for (int i = 0; i < 3; i++) {

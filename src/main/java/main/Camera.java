@@ -53,6 +53,10 @@ public class Camera {
                 VERTICAL_CAMERA_VECTOR);
     }
 
+    public Vector3f getCurrentPosition(){
+        return this.currentPosition;
+    }
+
     public void rotate(KeyBindings bindings) {
         if(!bindings.getState(Controls.SwitchCursor)) {
             bindings.setCursorPosition(new Tuple<>(this.centerX, this.centerY));
