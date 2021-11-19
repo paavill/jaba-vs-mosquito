@@ -21,7 +21,8 @@ public class Chunk {
     private final int sizeX;
     private final int sizeZ;
     private final int sizeY;
-    private boolean changed = false;
+    private boolean changed = true;
+    private boolean finishChanged = false;
 
     private int vertexCount = 0;
 
@@ -44,6 +45,14 @@ public class Chunk {
         this.sizeY = sizeY;
         this.sizeZ = sizeZ;
         this.blocks = new BlockType[sizeX][sizeY][sizeZ];
+    }
+
+    public boolean isFinishChanged() {
+        return finishChanged;
+    }
+
+    public void setFinishChanged(boolean finishChanged) {
+        this.finishChanged = finishChanged;
     }
 
     public Vector3f getPosition() {
@@ -88,6 +97,15 @@ public class Chunk {
                 }
             }
         }
+        changed = true;
+    }
+
+    public boolean isChanged() {
+        return changed;
+    }
+
+    public void setChanged(boolean changed) {
+        this.changed = changed;
     }
 
     public void setAllBloksType(BlockType type) {
@@ -98,6 +116,7 @@ public class Chunk {
                 }
             }
         }
+        changed = true;
     }
 
     private void addOffsetToAttributes(ArrayList<Float> vertex, int xOffset, int yOffset, int zOffset) {
@@ -139,66 +158,82 @@ public class Chunk {
 
     //можно отрефакторить но пока лень
     public void genBlocksMash(Chunk left, Chunk right, Chunk far, Chunk near) {
-        for (int x = 0; x < this.sizeX; x++) {
-            for (int y = 0; y < this.sizeY; y++) {
-                for (int z = 0; z < this.sizeZ; z++) {
-                    double s = glfwGetTime();
-                    if (blocks[x][y][z].getId() == 0) {
-                        if (x != 0) {
-                            if (blocks[x - 1][y][z].getId() != 0) {//1
-                                this.addAttributesDataToCollections(MeshSideType.RIGHT, x - 1, y, z);
-                            }
-                        }
-                        if (y != 0) {
-                            if (blocks[x][y - 1][z].getId() != 0) {//2
-                                this.addAttributesDataToCollections(MeshSideType.TOP, x, y - 1, z);
-                            }
-                        }
-                        if (z != 0) {
-                            if (blocks[x][y][z - 1].getId() != 0) {//3
-                                this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z - 1);
-                            }
-                        }
-                    }
-                    if (blocks[x][y][z].getId() != 0) {
-                        if (x != 0) {
-                            if (blocks[x - 1][y][z].getId() == 0) {//4
-                                this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
-                            }
-                            if (x == this.sizeX - 1) {
-                                if (right.getBlocks()[0][y][z].getId() == BlockType.AIR.getId()) {
-                                    this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
+        if(changed) {
+            this.colorsC.clear();
+            this.vertexesC.clear();
+            this.normalsC.clear();
+            this.texC.clear();
+            this.vertexCount = 0;
+            for (int x = 0; x < this.sizeX; x++) {
+                for (int y = 0; y < this.sizeY; y++) {
+                    for (int z = 0; z < this.sizeZ; z++) {
+                        double s = glfwGetTime();
+                        if (blocks[x][y][z].getId() == 0) {
+                            if (x != 0) {
+                                if (blocks[x - 1][y][z].getId() != 0) {//1
+                                    this.addAttributesDataToCollections(MeshSideType.RIGHT, x - 1, y, z);
                                 }
                             }
-                        } else if (x == 0) {
-                            if (left.getBlocks()[this.sizeX - 1][y][z].getId() == BlockType.AIR.getId()) {
-                                this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
-                            }
-                        }
-                        if (y != 0) {
-                            if (blocks[x][y - 1][z].getId() == 0) {//5
-                                this.addAttributesDataToCollections(MeshSideType.BOTTOM, x, y, z);
-                            }
-                        }
-                        if (z != 0) {
-                            if (blocks[x][y][z - 1].getId() == 0) {//6
-                                this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
-                            }
-                            if (z == this.sizeZ - 1) {
-                                if (near.getBlocks()[x][y][0].getId() == BlockType.AIR.getId()) {
-                                    this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z);
+                            if (y != 0) {
+                                if (blocks[x][y - 1][z].getId() != 0) {//2
+                                    this.addAttributesDataToCollections(MeshSideType.TOP, x, y - 1, z);
                                 }
                             }
-                        } else if (z == 0) {
-                            if (far.getBlocks()[x][y][this.sizeZ - 1].getId() == BlockType.AIR.getId()) {
-                                this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
+                            if (z != 0) {
+                                if (blocks[x][y][z - 1].getId() != 0) {//3
+                                    this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z - 1);
+                                }
+                            }
+                        }
+                        if (blocks[x][y][z].getId() != 0) {
+                            if (x != 0) {
+                                if (blocks[x - 1][y][z].getId() == 0) {//4
+                                    this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
+                                }
+                                if (x == this.sizeX - 1) {
+                                    if (right != null) {
+                                        if (right.getBlocks()[0][y][z].getId() == BlockType.AIR.getId()) {
+                                            this.addAttributesDataToCollections(MeshSideType.RIGHT, x, y, z);
+                                        }
+                                    }
+                                }
+                            } else if (x == 0) {
+                                if (left != null) {
+                                    if (left.getBlocks()[this.sizeX - 1][y][z].getId() == BlockType.AIR.getId()) {
+                                        this.addAttributesDataToCollections(MeshSideType.LEFT, x, y, z);
+                                    }
+                                }
+                            }
+                            if (y != 0) {
+                                if (blocks[x][y - 1][z].getId() == 0) {//5
+                                    this.addAttributesDataToCollections(MeshSideType.BOTTOM, x, y, z);
+                                }
+                            }
+                            if (z != 0) {
+                                if (blocks[x][y][z - 1].getId() == 0) {//6
+                                    this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
+                                }
+                                if (z == this.sizeZ - 1) {
+                                    if (near != null) {
+                                        if (near.getBlocks()[x][y][0].getId() == BlockType.AIR.getId()) {
+                                            this.addAttributesDataToCollections(MeshSideType.BACK, x, y, z);
+                                        }
+                                    }
+                                }
+                            } else if (z == 0) {
+                                if (far != null) {
+                                    if (far.getBlocks()[x][y][this.sizeZ - 1].getId() == BlockType.AIR.getId()) {
+                                        this.addAttributesDataToCollections(MeshSideType.FRONT, x, y, z);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+            this.vertexCount = this.vertexesC.size() / 3;
+            this.finishChanged = true;
         }
-        this.vertexCount = this.vertexesC.size() / 3;
     }
 
     public BlockType[][][] getBlocks() {

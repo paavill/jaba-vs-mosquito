@@ -16,10 +16,12 @@ public class Player extends Entity implements IRenderable {
     public Player(Camera mainCamera, KeyBindings bindings) {
         this.mainCamera = mainCamera;
         this.bindings = bindings;
+        this.setPosition(mainCamera.getCurrentPosition());
     }
 
     public void update() {
         updatePosition();
+        this.setPosition(mainCamera.getCurrentPosition());
         updateRotation();
     }
 

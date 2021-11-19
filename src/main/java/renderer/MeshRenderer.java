@@ -16,20 +16,19 @@ import static org.lwjgl.opengl.GL30.*;
 public class MeshRenderer {
 
     //TODO: УБРАТЬ ЭТО НАХУЙ
-    private static Map<Chunk, Integer> objectsToRender = new HashMap<>();
-    private static int shaderProgram = 0;
+   // private static Map<Chunk, Integer> objectsToRender = new HashMap<>();
+    private int shaderProgram = 0;
     private static FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 
-    public static void setShaderProgram(int sh) {
+    public MeshRenderer(int shaderProgram){
+        this.shaderProgram = shaderProgram;
+    }
+
+    public void setShaderProgram(int sh) {
         shaderProgram = sh;
     }
 
-    public static void addObjectToDraw(Chunk object) {
-        int VAO = getVAO(object);
-        objectsToRender.put(object, VAO);
-    }
-
-    private static float[] arrayWrapperToSimple(Float[] array) {
+    private float[] arrayWrapperToSimple(Float[] array) {
         float[] buff = new float[array.length];
         for (int i = 0; i < buff.length; i++) {
             buff[i] = array[i].floatValue();
@@ -37,7 +36,7 @@ public class MeshRenderer {
         return buff;
     }
 
-    private static int getVAO(Chunk object) {
+    public int getVAO(Chunk object) {
         int[] VBOs = new int[4];
         glGenBuffers(VBOs);
         int VAO = glGenVertexArrays();
@@ -72,13 +71,11 @@ public class MeshRenderer {
         return VAO;
     }
 
-    public static void drawAll() {
-        //glUseProgram(shaderProgram);
+    public void drawAll(Map<Chunk, Integer> objectsToRender) {
         objectsToRender.forEach((o, v) -> draw(o, v));
-        //glUseProgram(0);
     }
 
-    private static void draw(Chunk obj, int VAO) {
+    private void draw(Chunk obj, int VAO) {
         Matrix4f model = new Matrix4f();
         model.translate(obj.getPosition());
         fb.clear();
