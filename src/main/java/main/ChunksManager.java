@@ -126,12 +126,13 @@ public class ChunksManager {
                 CHUNK_SIZE_X + 3< chunks.get(0).get(0).getPosition().x){
 
             for(int x = 0; x < this.renderDistance - 1; x++){
-                chunks.set(x+1, chunks.get(x));
+                chunks.set(x+1, (ArrayList<Chunk>) chunks.get(x).clone());
             }
-
 
             for (int z = 0; z < this.renderDistance; z++) {
                 toDel.add(chunks.get(0).get(z));
+                chunks.get(1).get(z).setChanged(true);
+                chunks.get(1).get(z).setFinishChanged(false);
                 chunks.get(0).set(z,
                             new Chunk(new Vector3f(( leftChunkCalcPos ) * CHUNK_SIZE_X, 0,
                                     (z + farChunkCalcPos)* CHUNK_SIZE_Z),

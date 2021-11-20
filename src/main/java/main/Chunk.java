@@ -39,6 +39,17 @@ public class Chunk {
         blocksModels = blocks;
     }
 
+    public Chunk(Chunk chunk){
+        this.position = chunk.position;
+        this.sizeX = chunk.sizeX;
+        this.sizeY = chunk.sizeY;
+        this.sizeZ = chunk.sizeZ;
+        this.changed = chunk.changed;
+        this.finishChanged = chunk.finishChanged;
+        this.vertexCount = chunk.vertexCount;
+        this.blocks = new BlockType[sizeX][sizeY][sizeZ];
+    }
+
     public Chunk(Vector3f position, int sizeX, int sizeY, int sizeZ) {
         this.position = position;
         this.sizeX = sizeX;
