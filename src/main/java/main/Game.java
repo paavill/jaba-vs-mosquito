@@ -10,6 +10,7 @@ import renderer.Renderer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.*;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -26,6 +27,7 @@ public class Game {
     private Camera camera;
 
     private World world;
+    private ExecutorService threadPool = Executors.newSingleThreadExecutor();
 
     public void run() {
         init();
@@ -55,7 +57,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 0f),
                 center,
-                -90.0f, -40.0f, 0.3f, 0.3f);
+                -90.0f, -40.0f, 1.3f, 0.3f);
 
         renderer = new Renderer(window, camera);
         Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
@@ -65,14 +67,26 @@ public class Game {
     }
 
     private void loop() throws IOException, InterruptedException {
-
+        ArrayList<ArrayList<Chunk>> toDelete = new ArrayList<>();
         //TODO: Добавить DeltaTime
         while (!window.shouldClose()) {
             inputManager.handleEvents();
-            ArrayList<Chunk> toDelete = world.update();
-            //renderer.deleteObjectsFromRender(toDelete);
+            world.updateEntity();
+
+            Runnable task = () -> {
+                try {
+                    world.update();
+                } catch (ExecutionException |InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+            this.threadPool.submit(task);
+
+            renderer.deleteObjectsFromRender(world.getToDelete());
             renderer.addObjectsToDraw(world);
+
             renderer.render(world);
+
             window.update(bindings);
         }
     }

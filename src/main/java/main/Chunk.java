@@ -5,10 +5,8 @@ import game_objects.blocks.Block;
 import org.joml.SimplexNoise;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
-import renderer.GraphicResourceLoader;
 import renderer.Mesh;
 import renderer.MeshSideType;
-import renderer.Texture;
 
 import java.nio.FloatBuffer;
 import java.util.*;
@@ -23,6 +21,7 @@ public class Chunk {
     private final int sizeY;
     private boolean changed = true;
     private boolean finishChanged = false;
+    private boolean moved = false;
 
     private int vertexCount = 0;
 
@@ -75,8 +74,24 @@ public class Chunk {
         //доделать
     }
 
+    public boolean isChanged() {
+        return changed;
+    }
+
+    public void setChanged(boolean changed) {
+        this.changed = changed;
+    }
+
     public boolean getChanged() {
         return this.changed;
+    }
+
+    public boolean isMoved() {
+        return moved;
+    }
+
+    public void setMoved(boolean moved) {
+        this.moved = moved;
     }
 
     private float generatingFunction(int x, int z) {
@@ -109,14 +124,6 @@ public class Chunk {
             }
         }
         changed = true;
-    }
-
-    public boolean isChanged() {
-        return changed;
-    }
-
-    public void setChanged(boolean changed) {
-        this.changed = changed;
     }
 
     public void setAllBloksType(BlockType type) {
@@ -178,7 +185,7 @@ public class Chunk {
             for (int x = 0; x < this.sizeX; x++) {
                 for (int y = 0; y < this.sizeY; y++) {
                     for (int z = 0; z < this.sizeZ; z++) {
-                        double s = glfwGetTime();
+//                        double s = glfwGetTime();
                         if (blocks[x][y][z].getId() == 0) {
                             if (x != 0) {
                                 if (blocks[x - 1][y][z].getId() != 0) {//1

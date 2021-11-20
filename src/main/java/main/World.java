@@ -5,16 +5,13 @@ import input.KeyBindings;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 public class World {
 
     private Player player;
-    private ChunksManager chunksManager = new ChunksManager(10);
-    private ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 4);
+    private ChunksManager chunksManager = new ChunksManager(40);
+
 
     public World(Camera main, KeyBindings bindings) {
 
@@ -28,15 +25,17 @@ public class World {
         this.player.move(new Vector3f(0, 100,0));
     }
 
-    public ArrayList<Chunk> update() {
+    public ArrayList<ArrayList<Chunk>> getToDelete(){
+        return chunksManager.getToDeleteChunks();
+    }
+
+    public void updateEntity(){
         player.update();
         chunksManager.setPlayerPosition(player.getPosition());
-        Callable task = () -> {
-            return chunksManager.updateChunks();
-        };
-        FutureTask<String> future = new FutureTask<>(task);
-        this.threadPool.execute(future);
-        return null;
+    }
+
+    public void update() throws ExecutionException, InterruptedException {
+        chunksManager.updateChunks();
     }
 
     public ChunksManager getChunksManager() {

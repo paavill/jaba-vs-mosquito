@@ -1,8 +1,11 @@
 package renderer;
 
+import main.BlocksModelsInitializer;
 import main.Chunk;
+import main.Tuple;
 import org.joml.Matrix4f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL;
 
 import java.nio.FloatBuffer;
 import java.util.*;
@@ -15,8 +18,6 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class MeshRenderer {
 
-    //TODO: УБРАТЬ ЭТО НАХУЙ
-   // private static Map<Chunk, Integer> objectsToRender = new HashMap<>();
     private int shaderProgram = 0;
     private static FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 
@@ -36,7 +37,21 @@ public class MeshRenderer {
         return buff;
     }
 
-    public int getVAO(Chunk object) {
+    public void deleteVAO(Tuple<Integer, Integer[]> toDelete){
+        glBindVertexArray(0);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
+        glDeleteVertexArrays(toDelete.first);
+        for (Integer e: toDelete.second) {
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDeleteBuffers(e);
+        }
+
+    }
+
+    public Tuple<Integer, Integer[]> getVAO(Chunk object) {
         int[] VBOs = new int[4];
         glGenBuffers(VBOs);
         int VAO = glGenVertexArrays();
@@ -57,22 +72,25 @@ public class MeshRenderer {
             glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
             glBufferData(GL_ARRAY_BUFFER, attributeData[i], GL_STATIC_DRAW);
             glVertexAttribPointer(i, 3, GL_FLOAT, false, 0, 0);
-            glEnableVertexAttribArray(i);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
         glBindBuffer(GL_ARRAY_BUFFER, VBOs[3]);
         glBufferData(GL_ARRAY_BUFFER, attributeData[3], GL_STATIC_DRAW);
         glVertexAttribPointer(3, 2, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(3);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        return VAO;
+        Integer[] vbos = new Integer[VBOs.length];
+        for(int i = 0; i < vbos.length; i++){
+            vbos[i] = VBOs[i];
+        }
+        Tuple<Integer, Integer[]> result = new Tuple<>(VAO,vbos);
+        return result;
     }
 
-    public void drawAll(Map<Chunk, Integer> objectsToRender) {
-        objectsToRender.forEach((o, v) -> draw(o, v));
+    public void drawAll(Map<Chunk, Tuple<Integer, Integer[]>> objectsToRender) {
+        objectsToRender.forEach((o, v) -> draw(o, v.first));
     }
 
     private void draw(Chunk obj, int VAO) {
@@ -83,7 +101,17 @@ public class MeshRenderer {
         glUniformMatrix4fv(atrPos, false, model.get(fb));
 
         glBindVertexArray(VAO);
+        BlocksModelsInitializer.getTextureAtlas().bind();
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
         glDrawArrays(GL_TRIANGLES, 0, obj.getVertexCount());
+        BlocksModelsInitializer.getTextureAtlas().unBind();
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
         glBindVertexArray(0);
     }
 }

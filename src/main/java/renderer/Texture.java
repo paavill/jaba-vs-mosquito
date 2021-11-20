@@ -32,6 +32,10 @@ public class Texture {
         glBindTexture(GL_TEXTURE_2D, id);
     }
 
+    public void unBind() {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
     public void setParameter(int name, int value) {
         glTexParameteri(GL_TEXTURE_2D, name, value);
     }
