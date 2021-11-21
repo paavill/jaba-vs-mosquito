@@ -11,6 +11,7 @@ import java.io.*;
 import java.nio.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -58,7 +59,7 @@ public class Renderer {
                 toDeleteC = toDelete.get(i);
                 toDeleteC.forEach(e -> toDeleteVaos.add(this.objectsToRender.get(e)));
                 for (Tuple<Integer, Integer[]> e: toDeleteVaos) {
-             //       this.chunkRenderer.deleteVAO(e);
+                    this.chunkRenderer.deleteVAO(e);
                 }
                 toDeleteC.forEach(e -> this.objectsToRender.remove(e, this.objectsToRender.get(e)));
             }
@@ -68,17 +69,14 @@ public class Renderer {
 
     public void addObjectsToDraw(World world){
         ChunksManager manager = world.getChunksManager();
-        ArrayList<ArrayList<Chunk>> chunks = manager.getAllChunks();
+        ArrayList<Chunk> chunks = manager.getAllChunkToDraw();
         for(int x = 0; x < chunks.size(); x++){
-            for(int z = 0; z < chunks.get(0).size(); z++){
-                synchronized (chunks) {
-                    if (chunks.get(x).get(z).isChanged() && chunks.get(x).get(z).isFinishChanged()) {
-                        Chunk chunk = chunks.get(x).get(z);
-                        objectsToRender.put(chunk, this.chunkRenderer.getVAO(chunk));
-                        chunk.setChanged(false);
-                    }
+                Chunk chunk = chunks.get(x);
+                Tuple<Integer, Integer[]> t = this.chunkRenderer.getVAO(chunk);
+                if(t.first > 450){
+                    System.out.println(t.first);
                 }
-            }
+                objectsToRender.put(chunk, t);
         }
     }
 

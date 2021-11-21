@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 public class World {
 
     private Player player;
-    private ChunksManager chunksManager = new ChunksManager(40);
+    private ChunksManager chunksManager = new ChunksManager(20);
 
 
     public World(Camera main, KeyBindings bindings) {
