@@ -4,6 +4,7 @@ import main.*;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.*;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 
@@ -27,6 +28,8 @@ public class Renderer {
     private final Map<Chunk, Tuple<Integer, Integer[]>> objectsToRender = new HashMap<>();
     private final GLCapabilities capabilities;
 
+    private final ArrayList<Chunk> toDeleteBuff = new ArrayList<>();
+    private final ArrayList<Chunk> toUpdateBuff = new ArrayList<>();
 
     private final Matrix4f projection;
 
@@ -50,33 +53,51 @@ public class Renderer {
         this.chunkRenderer = new MeshRenderer(this.chunkShaderProgram);
     }
 
-    public void deleteObjectsFromRender(ArrayList<ArrayList<Chunk>> toDelete){
-        if(toDelete.size() > 0) {
-            ArrayList<Chunk> toDeleteC = new ArrayList<>();
-            int size = toDelete.size();
-            for(int i = 0; i < size; i++){
-                ArrayList<Tuple<Integer, Integer[]>> toDeleteVaos = new ArrayList<>();
-                toDeleteC = toDelete.get(i);
-                toDeleteC.forEach(e -> toDeleteVaos.add(this.objectsToRender.get(e)));
-                for (Tuple<Integer, Integer[]> e: toDeleteVaos) {
-                    this.chunkRenderer.deleteVAO(e);
+    public void deleteObjectsFromRender(World world){
+        ChunksManager manager = world.getChunksManager();
+        this.toDeleteBuff.addAll(manager.getToDeleteChunks());
+        double start = org.lwjgl.glfw.GLFW.glfwGetTime();
+        while (toDeleteBuff.size() > 0){
+            Chunk toDeleteC = toDeleteBuff.get(toDeleteBuff.size() - 1);
+            synchronized (toDeleteC) {
+                Tuple<Integer, Integer[]> toDeleteVaos = this.objectsToRender.get(toDeleteC);
+
+                if (toDeleteVaos != null) {
+                    this.chunkRenderer.deleteVAO(toDeleteVaos);
+                    this.objectsToRender.remove(toDeleteC, toDeleteVaos);
                 }
-                toDeleteC.forEach(e -> this.objectsToRender.remove(e, this.objectsToRender.get(e)));
+                this.toDeleteBuff.remove(toDeleteC);
             }
-            toDelete.remove(toDeleteC);
         }
     }
 
     public void addObjectsToDraw(World world){
         ChunksManager manager = world.getChunksManager();
-        ArrayList<Chunk> chunks = manager.getAllChunkToDraw();
-        for(int x = 0; x < chunks.size(); x++){
-                Chunk chunk = chunks.get(x);
+        this.toUpdateBuff.addAll(manager.getAllChunkToDraw());
+        while (toUpdateBuff.size() > 0){
+            Chunk chunk = toUpdateBuff.get(this.toUpdateBuff.size() - 1);
+            synchronized (chunk) {
                 Tuple<Integer, Integer[]> t = this.chunkRenderer.getVAO(chunk);
-                if(t.first > 450){
+                if (t.first > 450) {
                     System.out.println(t.first);
                 }
-                objectsToRender.put(chunk, t);
+                if (toDeleteBuff.indexOf(chunk) == -1) {
+                    if (this.objectsToRender.get(chunk) != null) {
+                        Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
+                        this.chunkRenderer.deleteVAO(toUpdate);
+                        this.objectsToRender.replace(chunk, t);
+                    } else {
+                        objectsToRender.put(chunk, t);
+                    }
+                    this.toUpdateBuff.remove(chunk);
+                } else {
+                    if (this.objectsToRender.get(chunk) != null) {
+                        Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
+                        this.chunkRenderer.deleteVAO(toUpdate);
+                        this.toDeleteBuff.remove(chunk);
+                    }
+                }
+            }
         }
     }
 
@@ -84,7 +105,7 @@ public class Renderer {
         return capabilities;
     }
 
-    public void render(World world) throws IOException, InterruptedException {
+    public void render() throws IOException, InterruptedException {
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 

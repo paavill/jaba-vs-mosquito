@@ -5,6 +5,7 @@ import input.KeyBindings;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.system.MemoryUtil;
 import renderer.Renderer;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 0f),
                 center,
-                -90.0f, -40.0f, 0.3f, 0.3f);
+                -90.0f, -40.0f, 50.3f, 0.3f);
 
         renderer = new Renderer(window, camera);
         Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
@@ -67,9 +68,10 @@ public class Game {
     }
 
     private void loop() throws IOException, InterruptedException {
-        ArrayList<ArrayList<Chunk>> toDelete = new ArrayList<>();
+
         //TODO: Добавить DeltaTime
         while (!window.shouldClose()) {
+
             inputManager.handleEvents();
             world.updateEntity();
 
@@ -82,12 +84,14 @@ public class Game {
             };
             this.threadPool.submit(task);
 
-            renderer.deleteObjectsFromRender(world.getToDelete());
+            renderer.deleteObjectsFromRender(world);
             renderer.addObjectsToDraw(world);
 
-            renderer.render(world);
+            renderer.render();
 
             window.update(bindings);
+
+
         }
     }
 }

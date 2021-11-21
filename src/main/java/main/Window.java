@@ -20,6 +20,7 @@ public class Window {
 
     private final Long windowDescriptor;
     private Tuple extent;
+    private boolean close = false;
 
     public Window(String title, Integer width, Integer height) {
         this.extent = new Tuple<Float, Float>(Float.valueOf(width), Float.valueOf(height));
@@ -98,6 +99,7 @@ public class Window {
 
     public void update(KeyBindings bindings){
         if(bindings.getState(Controls.CloseWindow)){
+            close = true;
             glfwSetWindowShouldClose(this.windowDescriptor, true);
         }
         if(bindings.getState(Controls.SwitchCursor)){

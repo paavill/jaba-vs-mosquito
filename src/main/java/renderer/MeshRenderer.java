@@ -62,6 +62,9 @@ public class MeshRenderer {
                 arrayWrapperToSimple(object.getToDrawNormalsBuffer().toArray(tempArray)),
                 arrayWrapperToSimple(object.getTexC().toArray(tempArray))
         };
+        if(object.getToDrawVertexBuffer().size() == 0){
+            int i = 0;
+        }
         object.getToDrawVertexBuffer().clear();
         object.getToDrawColorsBuffer().clear();
         object.getToDrawNormalsBuffer().clear();

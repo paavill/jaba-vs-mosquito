@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 public class World {
 
     private Player player;
-    private ChunksManager chunksManager = new ChunksManager(20);
+    private ChunksManager chunksManager = new ChunksManager(10);
 
 
     public World(Camera main, KeyBindings bindings) {
@@ -25,7 +25,7 @@ public class World {
         this.player.move(new Vector3f(0, 100,0));
     }
 
-    public ArrayList<ArrayList<Chunk>> getToDelete(){
+    public ArrayList<Chunk> getToDelete(){
         return chunksManager.getToDeleteChunks();
     }
 
