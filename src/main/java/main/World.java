@@ -5,12 +5,13 @@ import input.KeyBindings;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.*;
 
 public class World {
 
     private Player player;
-    private ChunksManager chunksManager = new ChunksManager(60);
+    private ChunksManager chunksManager = new ChunksManager(10);
 
 
     public World(Camera main, KeyBindings bindings) {
@@ -25,7 +26,7 @@ public class World {
         this.player.move(new Vector3f(0, 100,0));
     }
 
-    public ArrayList<Chunk> getToDelete(){
+    public LinkedList<Chunk> getToDelete(){
         return chunksManager.getToDeleteChunks();
     }
 

@@ -60,7 +60,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 0f),
                 center,
-                -90.0f, -40.0f, 0.3f, 0.3f);
+                -90.0f, -40.0f, 30.7f, 0.3f);
 
         renderer = new Renderer(window, camera);
         Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
@@ -70,11 +70,16 @@ public class Game {
     }
 
     private void loop() throws IOException, InterruptedException {
-
+        double start;
+        double end;
+        double delta = 0;
+        double er = 0;
         //TODO: Добавить DeltaTime
         while (!window.shouldClose()) {
-
+            start = GLFW.glfwGetTime();
             inputManager.handleEvents();
+            float toD = (float) delta;
+            world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(toD);
             world.updateEntity();
 
             Runnable task = () -> {
@@ -85,21 +90,24 @@ public class Game {
                 }
             };
             this.threadPool.submit(task);
-
-
+            double s = GLFW.glfwGetTime();
             renderer.addObjectsToDraw(world);
             renderer.deleteObjectsFromRender(world);
+            er = Math.max(GLFW.glfwGetTime() - s, er);
+            renderer.deleteExtraObjectsToDraw(world);
+
+            //System.out.println(er);
+            window.update(bindings);
 
             renderer.render();
 
-            float percent = (float)renderer.getToUpdateBuffSize()/600;
-            if(1 - percent < 1) {
-           //     world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(1 - percent);
+            end = GLFW.glfwGetTime();
+            delta = end - start;
+            if(delta < 10){
+                Thread.sleep(10 - (long)delta);
+            } else {
+                System.out.println(end - start);
             }
-
-            window.update(bindings);
-
-
         }
     }
 }

@@ -11,10 +11,7 @@ import org.lwjgl.opengl.GLCapabilities;
 
 import java.io.*;
 import java.nio.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
@@ -29,8 +26,8 @@ public class Renderer {
     private final Map<Chunk, Tuple<Integer, Integer[]>> objectsToRender = new HashMap<>();
     private final GLCapabilities capabilities;
 
-    private final ArrayList<Chunk> toDeleteBuff = new ArrayList<>();
-    private final ArrayList<Chunk> toUpdateBuff = new ArrayList<>();
+    private final LinkedList<Chunk> toDeleteBuff = new LinkedList<>();
+    private final LinkedList<Chunk> toUpdateBuff = new LinkedList<>();
 
     private final Matrix4f projection;
 
@@ -66,11 +63,10 @@ public class Renderer {
         ChunksManager manager = world.getChunksManager();
         this.toDeleteBuff.addAll(manager.getToDeleteChunks());
         double start = GLFW.glfwGetTime();
-        while (toDeleteBuff.size() > 0 && GLFW.glfwGetTime() - start < 0.003){
-            Chunk toDeleteC = toDeleteBuff.get(toDeleteBuff.size() - 1);
+        while (toDeleteBuff.size() > 0 && GLFW.glfwGetTime() - start < 4){
+            Chunk toDeleteC = toDeleteBuff.getFirst();
             synchronized (toDeleteC) {
                 Tuple<Integer, Integer[]> toDeleteVaos = this.objectsToRender.get(toDeleteC);
-
                 if (toDeleteVaos != null) {
                     this.chunkRenderer.deleteVAO(toDeleteVaos);
                     this.objectsToRender.remove(toDeleteC, toDeleteVaos);
@@ -84,34 +80,45 @@ public class Renderer {
         ChunksManager manager = world.getChunksManager();
         this.toUpdateBuff.addAll(manager.getAllChunkToDraw());
         double start = GLFW.glfwGetTime();
-        while (toUpdateBuff.size() > 0 && GLFW.glfwGetTime() - start < 0.003){
-            Chunk chunk = toUpdateBuff.get(this.toUpdateBuff.size() - 1);
+        while (toUpdateBuff.size() > 0 && GLFW.glfwGetTime() - start < 4){
+            Chunk chunk = toUpdateBuff.getFirst();
             synchronized (chunk) {
                 Tuple<Integer, Integer[]> t;
-                // if (t.first > 450) {
-                  //  System.out.println(t.first);
-                //}
-                if (toDeleteBuff.indexOf(chunk) == -1) {
-                    t = this.chunkRenderer.getVAO(chunk);
-                    if (this.objectsToRender.get(chunk) != null) {
-                        Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
-                        this.chunkRenderer.deleteVAO(toUpdate);
-                        this.objectsToRender.replace(chunk, t);
-                    } else {
-                        objectsToRender.put(chunk, t);
-                    }
-                    this.toUpdateBuff.remove(chunk);
-                } else {
-                    if (this.objectsToRender.get(chunk) != null) {
-                        Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
-                        this.chunkRenderer.deleteVAO(toUpdate);
-                        this.toDeleteBuff.remove(chunk);
-                    }
+                t = this.chunkRenderer.getVAO(chunk);
+                if (t.first > 2000) {
+                    System.out.println(t.first);
                 }
+                if (this.objectsToRender.get(chunk) != null) {
+                    Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
+                    this.chunkRenderer.deleteVAO(toUpdate);
+                    this.objectsToRender.replace(chunk, t);
+                } else {
+                    objectsToRender.put(chunk, t);
+                }
+                this.toUpdateBuff.remove(chunk);
             }
         }
     }
 
+    public void deleteExtraObjectsToDraw(World world){
+        int count = world.getChunksManager().getRenderDistance();
+        count *= count;
+        if(this.objectsToRender.size() > count /*&& this.toDeleteBuff.size() == 0 && this.toUpdateBuff.size() == 0*/){
+            HashSet<Chunk> values = new HashSet<>(this.objectsToRender.keySet());
+            LinkedList<Chunk> c =  world.getChunksManager().getAllChunks();
+            ArrayList<Chunk> toDl = new ArrayList<>();
+            for (Chunk e:this.objectsToRender.keySet()) {
+                if(c.indexOf(e) == -1){
+                    toDl.add(e);
+                }
+            }
+            for (Chunk e:toDl) {
+                Tuple<Integer, Integer[]> vaoToDel =this.objectsToRender.get(e);
+                this.objectsToRender.remove(e, vaoToDel);
+                this.chunkRenderer.deleteVAO(vaoToDel);
+            }
+        }
+    }
 
     public void render() throws IOException, InterruptedException {
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
