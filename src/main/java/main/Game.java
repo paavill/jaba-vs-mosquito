@@ -38,6 +38,8 @@ public class Game {
 
         }
         window.destroy();
+        world.destroy();
+        this.threadPool.shutdown();
         glfwTerminate();
         glfwSetErrorCallback(null).free();
     }
@@ -58,7 +60,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 0f),
                 center,
-                -90.0f, -40.0f, 50.3f, 0.3f);
+                -90.0f, -40.0f, 0.3f, 0.3f);
 
         renderer = new Renderer(window, camera);
         Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
@@ -84,10 +86,16 @@ public class Game {
             };
             this.threadPool.submit(task);
 
-            renderer.deleteObjectsFromRender(world);
+
             renderer.addObjectsToDraw(world);
+            renderer.deleteObjectsFromRender(world);
 
             renderer.render();
+
+            float percent = (float)renderer.getToUpdateBuffSize()/600;
+            if(1 - percent < 1) {
+           //     world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(1 - percent);
+            }
 
             window.update(bindings);
 

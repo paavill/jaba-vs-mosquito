@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 public class World {
 
     private Player player;
-    private ChunksManager chunksManager = new ChunksManager(10);
+    private ChunksManager chunksManager = new ChunksManager(60);
 
 
     public World(Camera main, KeyBindings bindings) {
@@ -29,6 +29,10 @@ public class World {
         return chunksManager.getToDeleteChunks();
     }
 
+    public void destroy(){
+        this.chunksManager.destroy();
+    }
+
     public void updateEntity(){
         player.update();
         chunksManager.setPlayerPosition(player.getPosition());
@@ -40,5 +44,9 @@ public class World {
 
     public ChunksManager getChunksManager() {
         return chunksManager;
+    }
+
+    public Player getPlayer(){
+        return this.player;
     }
 }

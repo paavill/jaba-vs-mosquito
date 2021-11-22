@@ -1,5 +1,6 @@
 package renderer;
 
+import game_objects.blocks.BlockType;
 import main.*;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -53,11 +54,19 @@ public class Renderer {
         this.chunkRenderer = new MeshRenderer(this.chunkShaderProgram);
     }
 
+    public int getToDeleteBuffSize(){
+        return this.toDeleteBuff.size();
+    }
+
+    public int getToUpdateBuffSize(){
+        return this.toUpdateBuff.size();
+    }
+
     public void deleteObjectsFromRender(World world){
         ChunksManager manager = world.getChunksManager();
         this.toDeleteBuff.addAll(manager.getToDeleteChunks());
-        double start = org.lwjgl.glfw.GLFW.glfwGetTime();
-        while (toDeleteBuff.size() > 0){
+        double start = GLFW.glfwGetTime();
+        while (toDeleteBuff.size() > 0 && GLFW.glfwGetTime() - start < 0.003){
             Chunk toDeleteC = toDeleteBuff.get(toDeleteBuff.size() - 1);
             synchronized (toDeleteC) {
                 Tuple<Integer, Integer[]> toDeleteVaos = this.objectsToRender.get(toDeleteC);
@@ -74,14 +83,16 @@ public class Renderer {
     public void addObjectsToDraw(World world){
         ChunksManager manager = world.getChunksManager();
         this.toUpdateBuff.addAll(manager.getAllChunkToDraw());
-        while (toUpdateBuff.size() > 0){
+        double start = GLFW.glfwGetTime();
+        while (toUpdateBuff.size() > 0 && GLFW.glfwGetTime() - start < 0.003){
             Chunk chunk = toUpdateBuff.get(this.toUpdateBuff.size() - 1);
             synchronized (chunk) {
-                Tuple<Integer, Integer[]> t = this.chunkRenderer.getVAO(chunk);
-                if (t.first > 450) {
-                    System.out.println(t.first);
-                }
+                Tuple<Integer, Integer[]> t;
+                // if (t.first > 450) {
+                  //  System.out.println(t.first);
+                //}
                 if (toDeleteBuff.indexOf(chunk) == -1) {
+                    t = this.chunkRenderer.getVAO(chunk);
                     if (this.objectsToRender.get(chunk) != null) {
                         Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
                         this.chunkRenderer.deleteVAO(toUpdate);
@@ -101,9 +112,6 @@ public class Renderer {
         }
     }
 
-    public GLCapabilities getCapabilities() {
-        return capabilities;
-    }
 
     public void render() throws IOException, InterruptedException {
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
@@ -122,7 +130,6 @@ public class Renderer {
         atrPos = glGetUniformLocation(chunkShaderProgram, "lightPos");
         Vector3f vec = renderCamera.getCurrentPosition();
         glUniform3f(atrPos, vec.x, vec.y, vec.z);
-
 
         this.chunkRenderer.drawAll(this.objectsToRender);
 

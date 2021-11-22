@@ -134,7 +134,7 @@ public class Chunk {
                 }
             }
         }
-        changed = true;
+        //changed = true;
     }
 
     private void addOffsetToAttributes(ArrayList<Float> vertex, int xOffset, int yOffset, int zOffset) {

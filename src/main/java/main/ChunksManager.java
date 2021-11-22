@@ -5,10 +5,8 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
 import org.lwjgl.glfw.*;
 
 public class ChunksManager {
@@ -34,6 +32,14 @@ public class ChunksManager {
         return this.chunks;
     }
 
+    public ArrayList<Chunk> getToUpdateMeshChunks() {
+        return toUpdateMeshChunks;
+    }
+
+    public void destroy(){
+        this.threadPool.shutdown();
+    }
+
     public ArrayList<Chunk> getAllChunkToDraw(){
         ArrayList<Chunk> toDraw = new ArrayList<>();
         synchronized (this.chunks) {
@@ -48,10 +54,6 @@ public class ChunksManager {
             }
         }
         return toDraw;
-    }
-
-    public ArrayList<Chunk> getToUpdateMeshChunks() {
-        return toUpdateMeshChunks;
     }
 
     public Chunk getChunkByGlobalCoords(float x, float z){
@@ -124,19 +126,19 @@ public class ChunksManager {
         this.getChunkByGlobalCoords(-16.f, -16.f).setAllBloksType(BlockType.AIR);
         this.getChunkByGlobalCoords(-32.f, -32.f).setAllBloksType(BlockType.AIR);
         this.getChunkByGlobalCoords(-48.f, -48.f).setAllBloksType(BlockType.AIR);
+        ArrayList<Callable<Object>> toDo = new ArrayList<>();
         for (int x = 0; x < this.renderDistance; x++) {
             for (int z = 0; z < this.renderDistance; z++) {
                 final int _x = x;
                 final int _z = z;
+
                 Runnable runnable = () -> {
                     modelsGeneration(_x, _z);
                 };
-                threadPool.execute(runnable);
+                toDo.add(Executors.callable(runnable));
             }
         }
-        threadPool.shutdown();
-        threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
-        threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 4);
+        threadPool.invokeAll(toDo);
     }
 
     public ArrayList<Chunk> getToDeleteChunks(){
@@ -155,74 +157,160 @@ public class ChunksManager {
         int rightChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_Z + (int)Math.ceil(this.renderDistance/2);
         int nearChunkCalcPos = (int)this.playerPosition.z/CHUNK_SIZE_Z + (int)Math.ceil(this.renderDistance/2);
         ArrayList<Chunk> toDel = new ArrayList<>();
-
+        //как это рефакторить даже не думал в душе не ***
         if (leftChunkCalcPos *
             CHUNK_SIZE_X + 3< chunks.get(0).get(0).getPosition().x){
             toDel.addAll(chunks.getLast());
-            //возникает проблема с пустой линией чанков
-            //toDel.addAll(chunks.get(0));
             synchronized (this.chunks){
-                while (this.chunks.size() >= this.renderDistance) {
-                    this.chunks.removeLast();
-                }
+                this.chunks.removeLast();
             }
-            if(!toDel.isEmpty()){
-                synchronized (this.toDeleteChunks) {
-                    this.toDeleteChunks.addAll(toDel);
-                }
+            synchronized (this.toDeleteChunks) {
+                this.toDeleteChunks.addAll(toDel);
             }
             LinkedList<Chunk> add = new LinkedList<>();
             for (int z = 0; z < this.renderDistance; z++) {
                 add.add(new Chunk(new Vector3f(
-                        chunks.get(0).get(z).getPosition().x - CHUNK_SIZE_X, 0,
-                        chunks.get(1).get(z).getPosition().z),
+                        chunks.getFirst().get(z).getPosition().x - CHUNK_SIZE_X, 0,
+                        chunks.getFirst().get(z).getPosition().z),
                         CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
-                chunks.get(0).get(z).setChanged(true);
-                chunks.get(0).get(z).setFinishChanged(false);
+               // chunks.get(0).get(z).setChanged(true);
+               // chunks.get(0).get(z).setFinishChanged(false);
             }
             synchronized (this.chunks) {
                 chunks.add(0, add);
             }
             double e1;
+            ArrayList<Callable<Object>> toDo = new ArrayList<>();
             for (int x = 0; x < this.renderDistance; x++) {
                 double r = GLFW.glfwGetTime();
                 final int _x = x;
                 Runnable runnable = () -> {
                     chunks.get(0).get(_x).generate();
                 };
-                threadPool.execute(runnable);
+                toDo.add(Executors.callable(runnable));
                  e1 = GLFW.glfwGetTime() - r;
             }
-            threadPool.shutdown();
-            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
-            threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            threadPool.invokeAll(toDo);
+
             double e;
+            toDo.clear();
             for (int x = 0; x < this.renderDistance; x++) {
                 final int _x = x;
                 Runnable runnable = () -> {
                     modelsGeneration(0, _x);
-                    modelsGeneration(1, _x);
+                    //modelsGeneration(1, _x);
                 };
-                threadPool.execute(runnable);
-
+                toDo.add(Executors.callable(runnable));
                 double r = GLFW.glfwGetTime();
-
                 e = GLFW.glfwGetTime() - r;
-
             }
-            threadPool.shutdown();
-            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
-            threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-           // leftChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_X - this.renderDistance/2;
+            threadPool.invokeAll(toDo);
         }
 
         if((rightChunkCalcPos - 1) *
                 CHUNK_SIZE_X - 3 > chunks.get(this.renderDistance - 1).get(0).getPosition().x){
             //System.out.println("x out right");
+            toDel.addAll(chunks.getFirst());
+
+            synchronized (this.chunks){
+                this.chunks.removeFirst();
+            }
+            synchronized (this.toDeleteChunks) {
+                this.toDeleteChunks.addAll(toDel);
+            }
+            LinkedList<Chunk> add = new LinkedList<>();
+            for (int z = 0; z < this.renderDistance; z++) {
+                add.add(new Chunk(new Vector3f(
+                        chunks.getLast().get(z).getPosition().x + CHUNK_SIZE_X, 0,
+                        chunks.getLast().get(z).getPosition().z),
+                        CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
+                // chunks.get(0).get(z).setChanged(true);
+                // chunks.get(0).get(z).setFinishChanged(false);
+            }
+            synchronized (this.chunks) {
+                chunks.add(add);
+            }
+            double e1;
+            ArrayList<Callable<Object>> toDo = new ArrayList<>();
+            for (int x = 0; x < this.renderDistance; x++) {
+                double r = GLFW.glfwGetTime();
+                final int _x = x;
+                Runnable runnable = () -> {
+                    chunks.getLast().get(_x).generate();
+                };
+                toDo.add(Executors.callable(runnable));
+                e1 = GLFW.glfwGetTime() - r;
+            }
+            threadPool.invokeAll(toDo);
+
+            double e;
+            toDo.clear();
+            for (int x = 0; x < this.renderDistance; x++) {
+                final int _x = x;
+                Runnable runnable = () -> {
+                    modelsGeneration(this.chunks.indexOf(this.chunks.getLast()), _x);
+                    //modelsGeneration(1, _x);
+                };
+                toDo.add(Executors.callable(runnable));
+                double r = GLFW.glfwGetTime();
+                e = GLFW.glfwGetTime() - r;
+            }
+            threadPool.invokeAll(toDo);
         }
+
         if(farChunkCalcPos *
-        CHUNK_SIZE_Z + 3 < chunks.get(0).get(0).getPosition().z){
+        CHUNK_SIZE_Z + 3 < chunks.get(0).get(0).getPosition().z && false){
             //System.out.println("x out far");
+            for (LinkedList<Chunk> e: this.chunks) {
+                toDel.add(e.getFirst());
+            }
+
+            synchronized (this.chunks){
+                for (LinkedList<Chunk> e: this.chunks) {
+                    e.removeLast();
+                }
+            }
+            synchronized (this.toDeleteChunks) {
+                this.toDeleteChunks.addAll(toDel);
+            }
+            LinkedList<Chunk> add = new LinkedList<>();
+            for (LinkedList<Chunk> e:this.chunks) {
+                add.add(new Chunk(new Vector3f(
+                        e.getFirst().getPosition().x, 0,
+                        e.getFirst().getPosition().z - CHUNK_SIZE_Z),
+                        CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
+            }
+            synchronized (this.chunks) {
+                for (LinkedList<Chunk> e:this.chunks) {
+                    add.add(new Chunk(new Vector3f(
+                            e.getFirst().getPosition().x, 0,
+                            e.getFirst().getPosition().z - CHUNK_SIZE_Z),
+                            CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
+                }
+            }
+            double e1;
+            ArrayList<Callable<Object>> toDo = new ArrayList<>();
+            for (LinkedList<Chunk> e:this.chunks) {
+                Runnable runnable = () -> {
+                    e.getFirst().generate();
+                };
+                toDo.add(Executors.callable(runnable));
+            }
+            threadPool.invokeAll(toDo);
+
+            double e;
+            toDo.clear();
+            for (int x = 0; x < this.renderDistance; x++) {
+                final int _x = x;
+                Runnable runnable = () -> {
+                    modelsGeneration(_x, 0);
+                    //modelsGeneration(1, _x);
+                };
+                toDo.add(Executors.callable(runnable));
+                double r = GLFW.glfwGetTime();
+                e = GLFW.glfwGetTime() - r;
+            }
+            threadPool.invokeAll(toDo);
         }
         if((nearChunkCalcPos - 1)*
         CHUNK_SIZE_Z - 3 > chunks.get(0).get(this.renderDistance - 1).getPosition().z){

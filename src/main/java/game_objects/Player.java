@@ -41,4 +41,8 @@ public class Player extends Entity implements IRenderable {
     public void move(Vector3f vec){
         mainCamera.moveByVector(vec);
     }
+
+    public Camera getMainCamera() {
+        return mainCamera;
+    }
 }

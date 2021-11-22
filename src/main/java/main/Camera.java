@@ -24,11 +24,13 @@ public class Camera {
 
     private float cameraMoveSpeed = 0;
     private float cameraViewPointSpeed = 0;
+    private final float defaultCameraMoveSpeed;
 
     public Camera() {
         this.yaw = -90;
         this.pitch = 0;
         this.cameraMoveSpeed = 0.3f;
+        this.defaultCameraMoveSpeed = this.cameraMoveSpeed;
         this.cameraViewPointSpeed = 0.3f;
         this.currentPosition = new Vector3f(0.f, 0.f, 3.f);
         this.centerX = 0;
@@ -39,6 +41,7 @@ public class Camera {
         this.yaw = yaw;
         this.pitch = pitch;
         this.cameraMoveSpeed = cameraMoveSpeed;
+        this.defaultCameraMoveSpeed = this.cameraMoveSpeed;
         this.cameraViewPointSpeed = cameraViewPointSpeed;
         this.currentPosition = position;
         this.centerX = viewCenter.first;
@@ -121,6 +124,14 @@ public class Camera {
     public void moveByVector(Vector3f movementVector) {
         this.currentPosition.add(movementVector);
         this.currentViewPoint.add(movementVector);
+    }
+
+    public void setCameraMoveSpeed(float newSpeed){
+        this.cameraMoveSpeed = newSpeed;
+    }
+
+    public void setCameraMoveSpeedPercentOfDefault(float percent){
+        this.cameraMoveSpeed = this.defaultCameraMoveSpeed * percent;
     }
 
     public Tuple<Float, Float> getViewCenter() {
