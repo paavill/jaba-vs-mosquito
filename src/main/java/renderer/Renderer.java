@@ -62,8 +62,11 @@ public class Renderer {
     public void deleteObjectsFromRender(World world){
         ChunksManager manager = world.getChunksManager();
         this.toDeleteBuff.addAll(manager.getToDeleteChunks());
-        double start = GLFW.glfwGetTime();
-        while (toDeleteBuff.size() > 0 && GLFW.glfwGetTime() - start < 4){
+        double start = 0;
+        double end = 0;
+        double delta = end - start;
+        while (toDeleteBuff.size() > 0 && delta < 4){
+            start = GLFW.glfwGetTime();
             Chunk toDeleteC = toDeleteBuff.getFirst();
             synchronized (toDeleteC) {
                 Tuple<Integer, Integer[]> toDeleteVaos = this.objectsToRender.get(toDeleteC);
@@ -73,21 +76,23 @@ public class Renderer {
                 }
                 this.toDeleteBuff.remove(toDeleteC);
             }
+            end = GLFW.glfwGetTime();
+            delta += end - start;
         }
     }
 
     public void addObjectsToDraw(World world){
         ChunksManager manager = world.getChunksManager();
         this.toUpdateBuff.addAll(manager.getAllChunkToDraw());
-        double start = GLFW.glfwGetTime();
-        while (toUpdateBuff.size() > 0 && GLFW.glfwGetTime() - start < 4){
+        double start = 0;
+        double end = 0;
+        double delta = end - start;
+        while (toUpdateBuff.size() > 0 && delta < 4){
+            start = GLFW.glfwGetTime();
             Chunk chunk = toUpdateBuff.getFirst();
             synchronized (chunk) {
                 Tuple<Integer, Integer[]> t;
                 t = this.chunkRenderer.getVAO(chunk);
-                if (t.first > 2000) {
-                    System.out.println(t.first);
-                }
                 if (this.objectsToRender.get(chunk) != null) {
                     Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
                     this.chunkRenderer.deleteVAO(toUpdate);
@@ -97,6 +102,8 @@ public class Renderer {
                 }
                 this.toUpdateBuff.remove(chunk);
             }
+            end = GLFW.glfwGetTime();
+            delta += end - start;
         }
     }
 

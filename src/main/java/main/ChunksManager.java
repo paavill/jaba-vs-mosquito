@@ -139,8 +139,8 @@ public class ChunksManager {
         LinkedList<Chunk> extraRight = new LinkedList<>();
         for (int z = 0; z < this.renderDistance; z++) {
             extraRight.add(new Chunk(new Vector3f(
-                    chunks.getFirst().get(z).getPosition().x + CHUNK_SIZE_X, 0,
-                    chunks.getFirst().get(z).getPosition().z),
+                    chunks.getLast().get(z).getPosition().x + CHUNK_SIZE_X, 0,
+                    chunks.getLast().get(z).getPosition().z),
                     CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
         }
         extraRight.forEach(el -> el.generate());
@@ -157,8 +157,8 @@ public class ChunksManager {
         LinkedList<Chunk> extraNear = new LinkedList<>();
         for (LinkedList<Chunk> e:this.chunks) {
             extraNear.add(new Chunk(new Vector3f(
-                    e.getFirst().getPosition().x, 0,
-                    e.getFirst().getPosition().z + CHUNK_SIZE_Z),
+                    e.getLast().getPosition().x, 0,
+                    e.getLast().getPosition().z + CHUNK_SIZE_Z),
                     CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
         }
         extraNear.forEach(el -> el.generate());
@@ -186,14 +186,15 @@ public class ChunksManager {
         this.getChunkByGlobalCoords(-32.f, -32.f).setAllBloksType(BlockType.AIR);
         this.getChunkByGlobalCoords(-48.f, -48.f).setAllBloksType(BlockType.AIR);
 
+        toDo.clear();
         ArrayList<LinkedList<Chunk>> extraChunks = this.getExtraChunks();
         for (int x = 0; x < this.renderDistance; x++) {
             for (int z = 0; z < this.renderDistance; z++) {
                 final int _x = x;
                 final int _z = z;
                 Runnable runnable = () -> {
-                    modelsGeneration(_x, _z, extraChunks.get(3).get(_z), extraChunks.get(2).get(_z),
-                            extraChunks.get(1).get(_x),  extraChunks.get(0).get(_x));
+                    modelsGeneration(_x, _z, extraChunks.get(3).get(_x), extraChunks.get(2).get(_x),
+                            extraChunks.get(1).get(_z),  extraChunks.get(0).get(_z));
                 };
                 toDo.add(Executors.callable(runnable));
             }
@@ -252,11 +253,14 @@ public class ChunksManager {
             toDo.clear();
 
             ArrayList<LinkedList<Chunk>> extraChunks = this.getExtraChunks();
-            for (int x = 0; x < this.renderDistance; x++) {
-                final int _x = x;
+            for (int z = 0; z < this.renderDistance; z++) {
+                final int _z = z;
                 Runnable runnable = () -> {
-                    modelsGeneration(0, _x, extraChunks.get(3).get(_x), extraChunks.get(2).get(_x),
-                            extraChunks.get(1).get(_x),  extraChunks.get(0).get(_x));
+                    modelsGeneration(0, _z,
+                            extraChunks.get(3).get(0),
+                            extraChunks.get(2).get(0),
+                            extraChunks.get(1).get(_z),
+                            extraChunks.get(0).get(_z));
                 };
                 toDo.add(Executors.callable(runnable));
             }
@@ -297,12 +301,15 @@ public class ChunksManager {
 
             ArrayList<LinkedList<Chunk>> extraChunks = this.getExtraChunks();
             toDo.clear();
-            for (int x = 0; x < this.renderDistance; x++) {
-                final int _x = x;
+            for (int z = 0; z < this.renderDistance; z++) {
+                final int _z = z;
                 Runnable runnable = () -> {
-                    modelsGeneration(this.chunks.indexOf(this.chunks.getLast()), _x,
-                            extraChunks.get(3).get(_x), extraChunks.get(2).get(_x),
-                            extraChunks.get(1).get(_x),  extraChunks.get(0).get(_x));
+                    int xc = this.renderDistance - 1;
+                    modelsGeneration(xc, _z,
+                            extraChunks.get(3).get(xc),
+                            extraChunks.get(2).get(xc),
+                            extraChunks.get(1).get(_z),
+                            extraChunks.get(0).get(_z));
                 };
                 toDo.add(Executors.callable(runnable));
             }
@@ -344,15 +351,17 @@ public class ChunksManager {
                 toDo.add(Executors.callable(runnable));
             }
             threadPool.invokeAll(toDo);
+            //во всех методах можно добавить в threadPool
             ArrayList<LinkedList<Chunk>> extraChunks = this.getExtraChunks();
             toDo.clear();
             for (int x = 0; x < this.renderDistance; x++) {
                 final int _x = x;
                 Runnable runnable = () -> {
-                    modelsGeneration(_x, 0, extraChunks.get(3).get(_x),
+                    modelsGeneration(_x, 0,
+                            extraChunks.get(3).get(_x),
                             extraChunks.get(2).get(_x),
-                            extraChunks.get(1).get(_x),
-                            extraChunks.get(0).get(_x));
+                            extraChunks.get(1).get(0),
+                            extraChunks.get(0).get(0));
                 };
                 toDo.add(Executors.callable(runnable));
             }
@@ -399,16 +408,25 @@ public class ChunksManager {
             for (int x = 0; x < this.renderDistance; x++) {
                 final int _x = x;
                 Runnable runnable = () -> {
-                    modelsGeneration(_x, this.renderDistance - 1, extraChunks.get(3).get(_x),
+                    int zc = this.renderDistance - 1;
+                    modelsGeneration(_x, this.renderDistance - 1,
+                            extraChunks.get(3).get(_x),
                             extraChunks.get(2).get(_x),
-                            extraChunks.get(1).get(_x),
-                            extraChunks.get(0).get(_x));
+                            extraChunks.get(1).get(zc),
+                            extraChunks.get(0).get(zc));
                 };
                 toDo.add(Executors.callable(runnable));
             }
             threadPool.invokeAll(toDo);
         }
+
         this.leftRightOrNearFar = !this.leftRightOrNearFar;
+    }
+
+    public void generateUpdatedChunks(){
+        for (LinkedList<Chunk> x: this.chunks) {
+
+        }
     }
 
     public void setPlayerPosition(Vector3f playerPosition) {

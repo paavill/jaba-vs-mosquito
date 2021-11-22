@@ -27,6 +27,10 @@ public class Game {
     private Renderer renderer;
     private Camera camera;
 
+    private int FPS = 60;
+    private int msPearFrame = 1000/FPS;
+    private double realFps = Double.MAX_VALUE;
+
     private World world;
     private ExecutorService threadPool = Executors.newSingleThreadExecutor();
 
@@ -60,13 +64,11 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 0f),
                 center,
-                -90.0f, -40.0f, 30.7f, 0.3f);
+                -90.0f, -40.0f, 1.7f, 0.3f);
 
         renderer = new Renderer(window, camera);
         Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
         world = new World(camera, bindings);
-
-        renderer.addObjectsToDraw(world);
     }
 
     private void loop() throws IOException, InterruptedException {
@@ -77,9 +79,12 @@ public class Game {
         //TODO: Добавить DeltaTime
         while (!window.shouldClose()) {
             start = GLFW.glfwGetTime();
+
+            renderer.render();
+
             inputManager.handleEvents();
             float toD = (float) delta;
-            world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(toD);
+            //world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(toD);
             world.updateEntity();
 
             Runnable task = () -> {
@@ -90,24 +95,25 @@ public class Game {
                 }
             };
             this.threadPool.submit(task);
-            double s = GLFW.glfwGetTime();
+
             renderer.addObjectsToDraw(world);
             renderer.deleteObjectsFromRender(world);
-            er = Math.max(GLFW.glfwGetTime() - s, er);
             renderer.deleteExtraObjectsToDraw(world);
 
-            //System.out.println(er);
             window.update(bindings);
-
-            renderer.render();
-
             end = GLFW.glfwGetTime();
+
             delta = end - start;
-            if(delta < 10){
-                Thread.sleep(10 - (long)delta);
+            if(delta*1000 < msPearFrame){
+                Thread.sleep(msPearFrame - (long)(delta*1000));
             } else {
                 System.out.println(end - start);
             }
+            double sh = GLFW.glfwGetTime() - start;
+            this.realFps = Math.min(1000/(sh*1000), this.realFps);
+            System.out.print(this.realFps);
+            System.out.print("   ");
+            System.out.println(1000/(sh*1000));
         }
     }
 }
