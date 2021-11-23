@@ -109,7 +109,9 @@ public class MeshRenderer {
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
         glEnableVertexAttribArray(3);
+       // System.out.println(obj.getPosition().toString() + "drawed start");
         glDrawArrays(GL_TRIANGLES, 0, obj.getVertexCount());
+       // System.out.println(obj.getPosition().toString() + "drawed");
         BlocksModelsInitializer.getTextureAtlas().unBind();
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);

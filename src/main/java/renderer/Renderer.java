@@ -1,6 +1,5 @@
 package renderer;
 
-import game_objects.blocks.BlockType;
 import main.*;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -12,11 +11,9 @@ import org.lwjgl.opengl.GLCapabilities;
 import java.io.*;
 import java.nio.*;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.glfw.GLFW.*;
 
 public class Renderer {
 
@@ -24,6 +21,7 @@ public class Renderer {
     private final Camera renderCamera;
     private final MeshRenderer chunkRenderer;
     private final Map<Chunk, Tuple<Integer, Integer[]>> objectsToRender = new HashMap<>();
+    private final HashSet<Chunk> toDeleteBuffSet = new HashSet<>();
     private final GLCapabilities capabilities;
 
     private final LinkedList<Chunk> toDeleteBuff = new LinkedList<>();
@@ -81,53 +79,75 @@ public class Renderer {
         }
     }
 
-    public void addObjectsToDraw(World world){
+    public void  addObjectsToDraw(World world){
         ChunksManager manager = world.getChunksManager();
-        this.toUpdateBuff.addAll(manager.getAllChunkToDraw());
+        this.toUpdateBuff.addAll(manager.getChunksToDraw());
+        LinkedList<Chunk> chunks =  world.getChunksManager().getAllChunks();
+        for (Chunk e:manager.getChunksToDraw()) {
+            if(chunks.indexOf(e) != -1 && this.toUpdateBuff.indexOf(e) == -1 && this.toDeleteBuff.indexOf(e) == -1){
+                this.toUpdateBuff.add(e);
+            }
+        }
         double start = 0;
         double end = 0;
         double delta = end - start;
-        while (toUpdateBuff.size() > 0 && delta < 4){
+        while (toUpdateBuff.size() > 0 && delta < 2){
             start = GLFW.glfwGetTime();
             Chunk chunk = toUpdateBuff.getFirst();
-            synchronized (chunk) {
-                Tuple<Integer, Integer[]> t;
-                t = this.chunkRenderer.getVAO(chunk);
-                if(t.first > 2000)
-                {
-                    System.out.println(t.first);
-                }
-                if (this.objectsToRender.get(chunk) != null) {
-                    Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
-                    this.chunkRenderer.deleteVAO(toUpdate);
-                    this.objectsToRender.replace(chunk, t);
-                } else {
-                    objectsToRender.put(chunk, t);
-                }
+            Tuple<Integer, Integer[]> newVao;
+            //коммон парт не может быть удалена, тупая идея! может и умная, но все ломается
+            if (this.objectsToRender.get(chunk) != null) {
+                this.toDeleteBuff.add(chunk);
+                //Tuple<Integer, Integer[]> toUpdateVao = this.objectsToRender.get(chunk);
+                //this.chunkRenderer.deleteVAO(toUpdateVao);
+                //newVao = this.chunkRenderer.getVAO(chunk);
+                //this.objectsToRender.replace(chunk, newVao);
+                //this.toUpdateBuff.remove(chunk);
+            } else {
+                newVao = this.chunkRenderer.getVAO(chunk);
+                objectsToRender.put(chunk, newVao);
                 this.toUpdateBuff.remove(chunk);
             }
+            chunk.setAddedToRender(true);
+            this.toUpdateBuff.remove(chunk);
+
             end = GLFW.glfwGetTime();
             delta += end - start;
         }
     }
 
     public void deleteExtraObjectsToDraw(World world){
+        System.out.println("1.1");
         int count = world.getChunksManager().getRenderDistance();
+        System.out.println("1.2");
+        int toGenSize = world.getChunksManager().getToGenerate().size();
+        System.out.println("1.3");
         count *= count;
-        if(this.objectsToRender.size() > count /*&& this.toDeleteBuff.size() == 0 && this.toUpdateBuff.size() == 0*/){
-            HashSet<Chunk> values = new HashSet<>(this.objectsToRender.keySet());
-            LinkedList<Chunk> c =  world.getChunksManager().getAllChunks();
-            ArrayList<Chunk> toDl = new ArrayList<>();
-            for (Chunk e:this.objectsToRender.keySet()) {
-                if(c.indexOf(e) == -1){
-                    toDl.add(e);
+        System.out.println("1.4");
+        LinkedList<Chunk> chunks =  world.getChunksManager().getAllChunks();
+        System.out.println("1.5");
+        for (Chunk e:this.objectsToRender.keySet()) {
+            if(chunks.indexOf(e) == -1){
+                this.toDeleteBuff.add(e);
+            }
+        }
+        System.out.println("1.6");
+        while (this.objectsToRender.size() > count && this.toDeleteBuff.size() > 0 /*&& toGenSize == 0 && this.toUpdateBuff.size() == 0*/){
+            Chunk chunk = this.toDeleteBuff.getFirst();
+
+            synchronized (chunk) {
+                if(chunk != null) {
+                    if (chunk.isAddedToRender()) {
+                        Tuple<Integer, Integer[]> vaoToDel = this.objectsToRender.get(chunk);
+                        if (vaoToDel != null) {
+                            this.objectsToRender.remove(chunk);
+                            this.chunkRenderer.deleteVAO(vaoToDel);
+                        }
+                    }
                 }
+                toDeleteBuff.remove(chunk);
             }
-            for (Chunk e:toDl) {
-                Tuple<Integer, Integer[]> vaoToDel =this.objectsToRender.get(e);
-                this.objectsToRender.remove(e, vaoToDel);
-                this.chunkRenderer.deleteVAO(vaoToDel);
-            }
+            toGenSize = world.getChunksManager().getToGenerate().size();
         }
     }
 
@@ -153,9 +173,9 @@ public class Renderer {
 
         glUseProgram(0);
         glClearColor(0.0f, 0.749f, 1.f, 0.0f);
-        //glfwMakeContextCurrent(window.getWindowDescriptor());
+
         window.swapBuffers();
-        //glfwMakeContextCurrent(0);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     }

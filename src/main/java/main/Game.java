@@ -7,7 +7,9 @@ import org.lwjgl.glfw.*;
 import renderer.Renderer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.concurrent.*;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -51,6 +53,7 @@ public class Game {
             throw new IllegalStateException("Failed to init GLFW.");
         }
 
+
         window = new Window("JabaCraft", 1024, 768);
         inputManager = new InputManager(window);
         bindings = new KeyBindings(inputManager);
@@ -60,7 +63,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(0f, 0f, 0f),
                 center,
-                -90.0f, -40.0f, 1.7f, 0.3f);
+                -90.0f, -40.0f, 0.1f, 0.3f);
 
         renderer = new Renderer(window, camera);
         Chunk.setBlocksModels(new HashMap<>(BlocksModelsInitializer.init()));
@@ -72,50 +75,70 @@ public class Game {
         double end;
         double delta = 0;
         double er = 0;
+
         //TODO: Добавить DeltaTime
         while (!window.shouldClose()) {
+            System.out.println("0");
             start = GLFW.glfwGetTime();
-
-            renderer.render();
-
+            System.out.println("1");
             inputManager.handleEvents();
+            System.out.println("2");
             float toD = (float) delta;
-            //world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(toD);
+            System.out.println("3");
+            world.getPlayer().getMainCamera().setCameraMoveSpeedPercentOfDefault(toD);
+            System.out.println("4");
             world.updateEntity();
+            System.out.println("5");
+
 
             Runnable task = () -> {
                 try {
                     //внутри метода надо менять метод для перехода по вериям генерации
+
                     world.update();
+
                 } catch (ExecutionException |InterruptedException e) {
                     e.printStackTrace();
                 }
             };
+            System.out.println("6");
             this.singleThreadPool.submit(task);
+            System.out.println("7");
 
-            /*Runnable task2 = () -> {
+            Runnable task2 = () -> {
                 world.generateObjects();
             };
-            this.threadPool.submit(task2);
-            this.threadPool.submit(task2);
-            this.threadPool.submit(task2);
-            this.threadPool.submit(task2);
-            this.threadPool.submit(task2);
-            this.threadPool.submit(task2);*/
+            System.out.println("8");
+            for(int i = 0; i < Runtime.getRuntime().availableProcessors() - 5; i++){
+                this.threadPool.execute(task2);
+            }
+            System.out.println("9");
 
             renderer.addObjectsToDraw(world);
-            renderer.deleteObjectsFromRender(world);
+            System.out.println("10");
+            //не использовать при работе второй версии загрузки
+            //renderer.deleteObjectsFromRender(world);
             renderer.deleteExtraObjectsToDraw(world);
+            System.out.println("11");
+
+            renderer.render();
+            System.out.println("12");
 
             window.update(bindings);
+            System.out.println("13");
             end = GLFW.glfwGetTime();
+            System.out.println("14");
 
-            delta = end - start;
-            if(delta*1000 < msPearFrame){
-                Thread.sleep(msPearFrame - (long)(delta*1000));
+            delta = (end - start)*1000;
+            System.out.println("15");
+            if(delta < msPearFrame){
+                Thread.sleep(msPearFrame - (long)(delta));
             }
-            //double sh = GLFW.glfwGetTime() - start;
-            //this.realFps = Math.min(1000/(sh*1000), this.realFps);
+            System.out.println("16");
+
+            double sh = GLFW.glfwGetTime() - start;
+            this.realFps = Math.min(1000/(sh*1000), this.realFps);
+            glfwSetWindowTitle(window.getWindowDescriptor(),"JabaCraft fps:" + String.valueOf(1000/(sh*1000)) + " delta: " + String.valueOf(delta));
             //System.out.print(this.realFps);
             //System.out.print("   ");
             //System.out.println(1000/(sh*1000));

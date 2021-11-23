@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 public class World {
 
     private Player player;
-    private ChunksManager chunksManager = new ChunksManager(40);
+    private ChunksManager chunksManager = new ChunksManager(30);
 
 
     public World(Camera main, KeyBindings bindings) {
@@ -40,7 +40,7 @@ public class World {
     }
 
     public void update() throws ExecutionException, InterruptedException {
-        chunksManager.updateChunks();
+        chunksManager.updateChunksN();
     }
 
     public void generateObjects(){

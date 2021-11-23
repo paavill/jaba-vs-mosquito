@@ -11,14 +11,14 @@ import org.lwjgl.glfw.*;
 
 public class ChunksManager {
 
-    private ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private LinkedList<Chunk> toDeleteChunks = new LinkedList<>();
-    private LinkedList<Chunk> toUpdateMeshChunks = new LinkedList<>();
-    private LinkedList<Chunk> toGenerate = new LinkedList<>();
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private final LinkedList<Chunk> toDeleteChunks = new LinkedList<>();
+    private final LinkedList<Chunk> toUpdateMeshChunks = new LinkedList<>();
+    private final LinkedList<Chunk> toGenerate = new LinkedList<>();
 
     boolean leftRightOrNearFar = false;
 
-    private int renderDistance;
+    private final int renderDistance;
     private static final int CHUNK_SIZE_X = 16;
     private static final int CHUNK_SIZE_Z = 16;
     private static final int CHUNK_SIZE_Y = 256;
@@ -32,10 +32,15 @@ public class ChunksManager {
     }
 
     public LinkedList<Chunk> getAllChunks(){
+        System.out.println("1.1.1");
         LinkedList<Chunk> toExport = new LinkedList<>();
+        System.out.println("1.1.2");
         synchronized (this.chunks){
-            this.chunks.forEach(e -> toExport.addAll(e));
+            System.out.println("1.1.3");
+            this.chunks.forEach(toExport::addAll);
+            System.out.println("1.1.4");
         }
+        System.out.println("1.1.5");
         return toExport;
     }
 
@@ -51,13 +56,13 @@ public class ChunksManager {
         this.threadPool.shutdown();
     }
 
-    public LinkedList<Chunk> getAllChunkToDraw(){
+    public LinkedList<Chunk> getChunksToDraw(){
         LinkedList<Chunk> toDraw = new LinkedList<>();
         synchronized (this.chunks) {
-            for (int x = 0; x < chunks.size(); x++) {
-                for (int z = 0; z < chunks.get(0).size(); z++) {
-                    if (chunks.get(x).get(z).isChanged() && chunks.get(x).get(z).isFinishChanged()) {
-                        Chunk chunk = chunks.get(x).get(z);
+            for (LinkedList<Chunk> x: this.chunks) {
+                for (Chunk z:x) {
+                    if (z.isChanged() && z.isFinishChanged() && !z.isAddedToRender()) {
+                        Chunk chunk = z;
                         toDraw.add(chunk);
                         chunk.setChanged(false);
                     }
@@ -73,6 +78,7 @@ public class ChunksManager {
         return chunks.get((int)x/CHUNK_SIZE_X - leftChunkCalcPos).get((int)z/CHUNK_SIZE_Z - farChunkCalcPos);
     }
 
+    //первая прогрузка мира
     private void createChunksInstances(){
         int leftChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_X - this.renderDistance/2;
         int farChunkCalcPos = (int)this.playerPosition.z/CHUNK_SIZE_Z - this.renderDistance/2;
@@ -87,6 +93,7 @@ public class ChunksManager {
         }
     }
 
+    //для первой версии генерации
     public void modelsGeneration(final int _x, final int _z, Chunk extraNear, Chunk extraFar,
                                  Chunk extraRight, Chunk extraLeft){
         if(_x != 0 && _x != this.renderDistance - 1 && _z != 0 && _z != this.renderDistance -1){
@@ -135,7 +142,7 @@ public class ChunksManager {
                     chunks.getFirst().get(z).getPosition().z),
                     CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
         }
-        extraLeft.forEach(el -> el.generate());
+        extraLeft.forEach(Chunk::generate);
         result.add(extraLeft);
         LinkedList<Chunk> extraRight = new LinkedList<>();
         for (int z = 0; z < this.renderDistance; z++) {
@@ -144,7 +151,7 @@ public class ChunksManager {
                     chunks.getLast().get(z).getPosition().z),
                     CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
         }
-        extraRight.forEach(el -> el.generate());
+        extraRight.forEach(Chunk::generate);
         result.add(extraRight);
         LinkedList<Chunk> extraFar = new LinkedList<>();
         for (LinkedList<Chunk> e:this.chunks) {
@@ -153,7 +160,7 @@ public class ChunksManager {
                     e.getFirst().getPosition().z - CHUNK_SIZE_Z),
                     CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
         }
-        extraFar.forEach(el -> el.generate());
+        extraFar.forEach(Chunk::generate);
         result.add(extraFar);
         LinkedList<Chunk> extraNear = new LinkedList<>();
         for (LinkedList<Chunk> e:this.chunks) {
@@ -167,6 +174,16 @@ public class ChunksManager {
         return result;
     }
 
+    public LinkedList<Chunk> getToDeleteChunks(){
+        LinkedList<Chunk> result = new LinkedList<>();
+        for (Chunk e:this.toDeleteChunks) {
+            result.add(e);
+        }
+        this.toDeleteChunks.clear();
+        return result;
+    }
+
+    //первая прогрузка мира
     public void generateChunks() throws InterruptedException {
         this.createChunksInstances();
         ArrayList<Callable<Object>> toDo = new ArrayList<>();
@@ -183,9 +200,9 @@ public class ChunksManager {
         threadPool.invokeAll(toDo);
 
         this.getChunkByGlobalCoords(0.f, 0.f).setAllBloksType(BlockType.AIR);
-        this.getChunkByGlobalCoords(-16.f, -16.f).setAllBloksType(BlockType.AIR);
-        this.getChunkByGlobalCoords(-32.f, -32.f).setAllBloksType(BlockType.AIR);
-        this.getChunkByGlobalCoords(-48.f, -48.f).setAllBloksType(BlockType.AIR);
+        //this.getChunkByGlobalCoords(-16.f, -16.f).setAllBloksType(BlockType.AIR);
+        //this.getChunkByGlobalCoords(-32.f, -32.f).setAllBloksType(BlockType.AIR);
+        //this.getChunkByGlobalCoords(-48.f, -48.f).setAllBloksType(BlockType.AIR);
 
         toDo.clear();
         ArrayList<LinkedList<Chunk>> extraChunks = this.getExtraChunks();
@@ -203,17 +220,7 @@ public class ChunksManager {
         threadPool.invokeAll(toDo);
     }
 
-    public LinkedList<Chunk> getToDeleteChunks(){
-        LinkedList<Chunk> result = new LinkedList<>();
-        for (Chunk e:this.toDeleteChunks) {
-            result.add(e);
-        }
-        this.toDeleteChunks.clear();
-        return result;
-    }
-
     public void updateChunks() throws InterruptedException {
-
         int leftChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_X - this.renderDistance/2;
         int farChunkCalcPos = (int)this.playerPosition.z/CHUNK_SIZE_Z - this.renderDistance/2;
         int rightChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_Z + (int)Math.ceil(this.renderDistance/2);
@@ -424,8 +431,8 @@ public class ChunksManager {
         this.leftRightOrNearFar = !this.leftRightOrNearFar;
     }
 
+    //для второй версии генерации
     public void updateChunksN() throws InterruptedException {
-
         int leftChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_X - this.renderDistance/2;
         int farChunkCalcPos = (int)this.playerPosition.z/CHUNK_SIZE_Z - this.renderDistance/2;
         int rightChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_Z + (int)Math.ceil(this.renderDistance/2);
@@ -434,19 +441,17 @@ public class ChunksManager {
         //как это рефакторить даже не думал в душе не ***
         if (leftChunkCalcPos *
                 CHUNK_SIZE_X + 3< chunks.get(0).get(0).getPosition().x && this.leftRightOrNearFar){
-            toDel.addAll(chunks.getLast());
-
-            this.toDeleteChunks.addAll(toDel);
             LinkedList<Chunk> newChunks = new LinkedList<>();
-
             for (int z = 0; z < this.renderDistance; z++) {
                 newChunks.add(new Chunk(new Vector3f(
                         chunks.getFirst().get(z).getPosition().x - CHUNK_SIZE_X, 0,
                         chunks.getFirst().get(z).getPosition().z),
                         CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
             }
-            this.chunks.removeLast();
-            chunks.add(0, newChunks);
+            synchronized (this.chunks) {
+                this.chunks.removeLast();
+                chunks.add(0, newChunks);
+            }
             synchronized (this.toGenerate){
                 this.toGenerate.addAll(newChunks);
             }
@@ -456,22 +461,17 @@ public class ChunksManager {
         if((rightChunkCalcPos - 1) *
                 CHUNK_SIZE_X - 3 > chunks.get(this.renderDistance - 1).get(0).getPosition().x && this.leftRightOrNearFar){
             //System.out.println("x out right");
-            toDel.addAll(chunks.getFirst());
-
-            this.toDeleteChunks.addAll(toDel);
-
             LinkedList<Chunk> add = new LinkedList<>();
-
             for (int z = 0; z < this.renderDistance; z++) {
                 add.add(new Chunk(new Vector3f(
                         chunks.getLast().get(z).getPosition().x + CHUNK_SIZE_X, 0,
                         chunks.getLast().get(z).getPosition().z),
                         CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
             }
-
-            this.chunks.removeFirst();
-            chunks.add(add);
-
+            synchronized (this.chunks) {
+                this.chunks.removeFirst();
+                chunks.add(add);
+            }
             synchronized (this.toGenerate){
                 this.toGenerate.addAll(add);
             }
@@ -479,14 +479,10 @@ public class ChunksManager {
 
         if(farChunkCalcPos *
                 CHUNK_SIZE_Z + 3 < chunks.get(0).get(0).getPosition().z && !this.leftRightOrNearFar){
-            //System.out.println("x out far");
-
+            //System.out.println("x out far")
             for (LinkedList<Chunk> e : this.chunks) {
                 toDel.add(e.getLast());
             }
-
-            this.toDeleteChunks.addAll(toDel);
-
             LinkedList<Chunk> add = new LinkedList<>();
             for (LinkedList<Chunk> e : this.chunks) {
                 add.add(new Chunk(new Vector3f(
@@ -494,15 +490,15 @@ public class ChunksManager {
                         e.getFirst().getPosition().z - CHUNK_SIZE_Z),
                         CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
             }
-
             synchronized (this.toGenerate){
                 this.toGenerate.addAll(add);
             }
-
-            for (LinkedList<Chunk> e:this.chunks) {
-                e.removeLast();
-                e.addFirst(add.getFirst());
-                add.removeFirst();
+            synchronized (this.chunks) {
+                for (LinkedList<Chunk> e : this.chunks) {
+                    e.removeLast();
+                    e.addFirst(add.getFirst());
+                    add.removeFirst();
+                }
             }
         }
 
@@ -512,44 +508,85 @@ public class ChunksManager {
             for (LinkedList<Chunk> e : this.chunks) {
                 toDel.add(e.getFirst());
             }
-
-            this.toDeleteChunks.addAll(toDel);
-
             LinkedList<Chunk> add = new LinkedList<>();
-
             for (LinkedList<Chunk> e : this.chunks) {
                 add.add(new Chunk(new Vector3f(
                         e.getLast().getPosition().x, 0,
                         e.getLast().getPosition().z + CHUNK_SIZE_Z),
                         CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z));
             }
-
             synchronized (this.toGenerate){
                 this.toGenerate.addAll(add);
             }
-
-            for (LinkedList<Chunk> e:this.chunks) {
-                e.removeFirst();
-                e.addLast(add.getFirst());
-                add.removeFirst();
+            synchronized (this.chunks) {
+                for (LinkedList<Chunk> e : this.chunks) {
+                    e.removeFirst();
+                    e.addLast(add.getFirst());
+                    add.removeFirst();
+                }
             }
         }
 
         this.leftRightOrNearFar = !this.leftRightOrNearFar;
     }
 
-    public void generateUpdatedChunks(){
+    //для второй версии генерации
+    //метод еще можно оптимизировать по скорости загрузки
+    public void generateUpdatedChunks() {
+        Chunk toGen = null;
         synchronized (this.toGenerate) {
             if (toGenerate.size() > 0) {
-                Chunk toGen = this.toGenerate.getFirst();
-                if (toGen.getChanged() && !toGen.isFinishChanged()) {
-                    toGen.generate();
-                    toGen.genBlocksMash(null, null, null, null);
-
-                    this.toGenerate.remove(toGen);
-
+                toGen = this.toGenerate.getFirst();
+                this.toGenerate.remove(toGen);
+            }
+        }
+        if(toGen != null) {
+            Vector3f pos = toGen.getPosition();
+            Chunk left = new Chunk(new Vector3f(
+                    pos.x - CHUNK_SIZE_X, 0, pos.z),
+                    CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z);
+            Chunk right = new Chunk(new Vector3f(
+                    pos.x + CHUNK_SIZE_X, 0, pos.z),
+                    CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z);
+            Chunk far = new Chunk(new Vector3f(
+                    pos.x, 0, pos.z - CHUNK_SIZE_Z),
+                    CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z);
+            Chunk near = new Chunk(new Vector3f(
+                    pos.x, 0, pos.z + CHUNK_SIZE_Z),
+                    CHUNK_SIZE_X, CHUNK_SIZE_Y, CHUNK_SIZE_Z);
+            synchronized (this.toGenerate) {
+                for (Chunk e : this.toGenerate) {
+                    if ((int) e.getPosition().x == (int) left.getPosition().x &&
+                            (int) e.getPosition().z == (int) left.getPosition().z) {
+                        left = e;
+                    }
+                    if ((int) e.getPosition().x == (int) right.getPosition().x &&
+                            (int) e.getPosition().z == (int) right.getPosition().z) {
+                        right = e;
+                    }
+                    if ((int) e.getPosition().x == (int) far.getPosition().x &&
+                            (int) e.getPosition().z == (int) far.getPosition().z) {
+                        far = e;
+                    }
+                    if ((int) e.getPosition().x == (int) near.getPosition().x &&
+                            (int) e.getPosition().z == (int) near.getPosition().z) {
+                        near = e;
+                    }
                 }
             }
+            toGen.generate();
+            left.generate();
+            right.generate();
+            far.generate();
+            near.generate();
+            toGen.genBlocksMash(left, right, far, near);
+            //toGen.genBlocksMash(null, null, null, null);
+        }
+    }
+
+    public LinkedList<Chunk> getToGenerate(){
+        synchronized (this.toGenerate) {
+            return this.toGenerate;
         }
     }
 

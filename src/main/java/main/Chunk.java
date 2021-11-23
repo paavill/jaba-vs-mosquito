@@ -22,6 +22,8 @@ public class Chunk {
     private boolean changed = true;
     private boolean finishChanged = false;
     private boolean moved = false;
+    private boolean finishGenerated = false;
+    private boolean addedToRender = false;
 
     private int vertexCount = 0;
 
@@ -57,8 +59,20 @@ public class Chunk {
         this.blocks = new BlockType[sizeX][sizeY][sizeZ];
     }
 
+    public boolean isFinishGenerated() {
+        return finishGenerated;
+    }
+
     public boolean isFinishChanged() {
         return finishChanged;
+    }
+
+    public boolean isAddedToRender() {
+        return addedToRender;
+    }
+
+    public void setAddedToRender(boolean addedToRender) {
+        this.addedToRender = addedToRender;
     }
 
     public void setFinishChanged(boolean finishChanged) {
@@ -105,25 +119,27 @@ public class Chunk {
     }
 
     public void generate() {
-        Random rand = new Random((long) glfwGetTime());
-        FloatBuffer bf = BufferUtils.createFloatBuffer(16);
-        for (int x = 0; x < this.sizeX; x++) {
-            for (int y = 0; y < this.sizeY; y++) {
-                for (int z = 0; z < this.sizeZ; z++) {
-                    if (this.generationPredicate(x, y, z)) {
-                        blocks[x][y][z] = BlockType.STONE;
-                    } else {
-                        blocks[x][y][z] = BlockType.AIR;
-                        if (y != 0) {
-                            if (blocks[x][y - 1][z] != BlockType.AIR) {
-                                blocks[x][y - 1][z] = BlockType.GRASS;
+        if(!this.finishGenerated) {
+            FloatBuffer bf = BufferUtils.createFloatBuffer(16);
+            for (int x = 0; x < this.sizeX; x++) {
+                for (int y = 0; y < this.sizeY; y++) {
+                    for (int z = 0; z < this.sizeZ; z++) {
+                        if (this.generationPredicate(x, y, z)) {
+                            blocks[x][y][z] = BlockType.STONE;
+                        } else {
+                            blocks[x][y][z] = BlockType.AIR;
+                            if (y != 0) {
+                                if (blocks[x][y - 1][z] != BlockType.AIR) {
+                                    blocks[x][y - 1][z] = BlockType.GRASS;
+                                }
                             }
                         }
                     }
                 }
             }
+            this.changed = true;
+            this.finishGenerated = true;
         }
-        changed = true;
     }
 
     public void setAllBloksType(BlockType type) {
@@ -176,7 +192,7 @@ public class Chunk {
 
     //можно отрефакторить но пока лень
     public void genBlocksMash(Chunk left, Chunk right, Chunk far, Chunk near) {
-        if(changed) {
+        if(changed && finishGenerated) {
             this.colorsC.clear();
             this.vertexesC.clear();
             this.normalsC.clear();
