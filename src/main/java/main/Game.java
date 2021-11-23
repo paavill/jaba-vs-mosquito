@@ -4,19 +4,13 @@ import input.InputManager;
 import input.KeyBindings;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.system.MemoryUtil;
 import renderer.Renderer;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.*;
 
-import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
-import static org.lwjgl.opengl.GL11.glEnable;
 
 public class Game {
 
@@ -32,7 +26,8 @@ public class Game {
     private double realFps = Double.MAX_VALUE;
 
     private World world;
-    private ExecutorService threadPool = Executors.newSingleThreadExecutor();
+    private ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();
+    private ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     public void run() {
         init();
@@ -43,6 +38,7 @@ public class Game {
         }
         window.destroy();
         world.destroy();
+        this.singleThreadPool.shutdown();
         this.threadPool.shutdown();
         glfwTerminate();
         glfwSetErrorCallback(null).free();
@@ -89,12 +85,23 @@ public class Game {
 
             Runnable task = () -> {
                 try {
+                    //внутри метода надо менять метод для перехода по вериям генерации
                     world.update();
                 } catch (ExecutionException |InterruptedException e) {
                     e.printStackTrace();
                 }
             };
-            this.threadPool.submit(task);
+            this.singleThreadPool.submit(task);
+
+            /*Runnable task2 = () -> {
+                world.generateObjects();
+            };
+            this.threadPool.submit(task2);
+            this.threadPool.submit(task2);
+            this.threadPool.submit(task2);
+            this.threadPool.submit(task2);
+            this.threadPool.submit(task2);
+            this.threadPool.submit(task2);*/
 
             renderer.addObjectsToDraw(world);
             renderer.deleteObjectsFromRender(world);
@@ -106,14 +113,12 @@ public class Game {
             delta = end - start;
             if(delta*1000 < msPearFrame){
                 Thread.sleep(msPearFrame - (long)(delta*1000));
-            } else {
-                System.out.println(end - start);
             }
-            double sh = GLFW.glfwGetTime() - start;
-            this.realFps = Math.min(1000/(sh*1000), this.realFps);
-            System.out.print(this.realFps);
-            System.out.print("   ");
-            System.out.println(1000/(sh*1000));
+            //double sh = GLFW.glfwGetTime() - start;
+            //this.realFps = Math.min(1000/(sh*1000), this.realFps);
+            //System.out.print(this.realFps);
+            //System.out.print("   ");
+            //System.out.println(1000/(sh*1000));
         }
     }
 }

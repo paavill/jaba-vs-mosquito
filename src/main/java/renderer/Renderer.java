@@ -67,14 +67,14 @@ public class Renderer {
         double delta = end - start;
         while (toDeleteBuff.size() > 0 && delta < 4){
             start = GLFW.glfwGetTime();
-            Chunk toDeleteC = toDeleteBuff.getFirst();
-            synchronized (toDeleteC) {
-                Tuple<Integer, Integer[]> toDeleteVaos = this.objectsToRender.get(toDeleteC);
+            Chunk chunk = toDeleteBuff.getFirst();
+            synchronized (chunk) {
+                Tuple<Integer, Integer[]> toDeleteVaos = this.objectsToRender.get(chunk);
                 if (toDeleteVaos != null) {
                     this.chunkRenderer.deleteVAO(toDeleteVaos);
-                    this.objectsToRender.remove(toDeleteC, toDeleteVaos);
+                    this.objectsToRender.remove(chunk, toDeleteVaos);
                 }
-                this.toDeleteBuff.remove(toDeleteC);
+                this.toDeleteBuff.remove(chunk);
             }
             end = GLFW.glfwGetTime();
             delta += end - start;
@@ -93,6 +93,10 @@ public class Renderer {
             synchronized (chunk) {
                 Tuple<Integer, Integer[]> t;
                 t = this.chunkRenderer.getVAO(chunk);
+                if(t.first > 2000)
+                {
+                    System.out.println(t.first);
+                }
                 if (this.objectsToRender.get(chunk) != null) {
                     Tuple<Integer, Integer[]> toUpdate = this.objectsToRender.get(chunk);
                     this.chunkRenderer.deleteVAO(toUpdate);
