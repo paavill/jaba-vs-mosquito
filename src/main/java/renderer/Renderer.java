@@ -12,6 +12,8 @@ import java.io.*;
 import java.nio.*;
 import java.util.*;
 
+import static org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback;
+import static org.lwjgl.glfw.GLFW.glfwSetWindowSizeCallback;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
 
@@ -27,7 +29,7 @@ public class Renderer {
     private final LinkedList<Chunk> toDeleteBuff = new LinkedList<>();
     private final LinkedList<Chunk> toUpdateBuff = new LinkedList<>();
 
-    private final Matrix4f projection;
+    private Matrix4f projection;
 
     private int chunkShaderProgram;
     private Texture texture;
@@ -35,6 +37,7 @@ public class Renderer {
     public Renderer(Window window, Camera renderCamera) {
         this.window = window;
         this.capabilities = GL.createCapabilities();
+        glfwSetWindowSizeCallback(window.getWindowDescriptor(), window::resizeWindowCallback);
         this.renderCamera = renderCamera;
         this.projection = new Matrix4f().perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 1000.f);
         glEnable(GL_DEPTH_TEST);
@@ -44,7 +47,7 @@ public class Renderer {
             //создание текстурного астласа должно быть здесь, но в силу плохой архитекруты
             //загрузки текстур (со стороны paavill), создание пока что не тут.
         } catch (Exception ex) {
-
+            ex.printStackTrace();
         }
         this.chunkRenderer = new MeshRenderer(this.chunkShaderProgram);
     }
@@ -55,6 +58,10 @@ public class Renderer {
 
     public int getToUpdateBuffSize(){
         return this.toUpdateBuff.size();
+    }
+
+    public GLCapabilities getCapabilities() {
+        return capabilities;
     }
 
     public void deleteObjectsFromRender(World world){
@@ -117,21 +124,15 @@ public class Renderer {
     }
 
     public void deleteExtraObjectsToDraw(World world){
-        System.out.println("1.1");
         int count = world.getChunksManager().getRenderDistance();
-        System.out.println("1.2");
         int toGenSize = world.getChunksManager().getToGenerate().size();
-        System.out.println("1.3");
         count *= count;
-        System.out.println("1.4");
         LinkedList<Chunk> chunks =  world.getChunksManager().getAllChunks();
-        System.out.println("1.5");
         for (Chunk e:this.objectsToRender.keySet()) {
             if(chunks.indexOf(e) == -1){
                 this.toDeleteBuff.add(e);
             }
         }
-        System.out.println("1.6");
         while (this.objectsToRender.size() > count && this.toDeleteBuff.size() > 0 /*&& toGenSize == 0 && this.toUpdateBuff.size() == 0*/){
             Chunk chunk = this.toDeleteBuff.getFirst();
 
@@ -160,7 +161,10 @@ public class Renderer {
         fb.clear();
         atrPos = glGetUniformLocation(chunkShaderProgram, "view");
         glUniformMatrix4fv(atrPos, false, renderCamera.generateMatrix().get(fb));
-
+        Float w = Float.valueOf(this.window.getExtent().first);
+        Float h = Float.valueOf(this.window.getExtent().second);
+        this.projection = new Matrix4f().perspective((float) Math.toRadians(77),
+                w / h, 0.1f, 1000.f);
         fb.clear();
         atrPos = glGetUniformLocation(chunkShaderProgram, "projection");
         glUniformMatrix4fv(atrPos, false, projection.get(fb));

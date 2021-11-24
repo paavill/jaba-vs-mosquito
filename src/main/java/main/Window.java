@@ -3,8 +3,11 @@ package main;
 import input.Controls;
 import input.KeyBindings;
 import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
+import renderer.Renderer;
 
+import java.io.IOException;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -19,35 +22,27 @@ public class Window {
     private static final Integer DEFAULT_HEIGHT = 640;
 
     private final Long windowDescriptor;
-    private Tuple extent;
+    private Tuple<Float, Float> extent;
 
     public Window(String title, Integer width, Integer height) {
         this.extent = new Tuple<Float, Float>(Float.valueOf(width), Float.valueOf(height));
-
         glfwDefaultWindowHints();
-
         this.windowDescriptor = glfwCreateWindow(width, height, title, NULL, NULL);
         if (windowDescriptor == NULL) {
             throw new RuntimeException("Can't create window");
         }
 
-        glfwSetFramebufferSizeCallback(windowDescriptor, this::resizeWindowCallback);
-
         try (MemoryStack stack = stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1);
             IntBuffer pHeight = stack.mallocInt(1);
-
             glfwGetWindowSize(windowDescriptor, pWidth, pHeight);
-
             GLFWVidMode videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
             glfwSetWindowPos(
                     windowDescriptor,
                     (videoMode.width() - pWidth.get(0)) / 2,
                     (videoMode.height() - pHeight.get(0)) / 2
             );
         }
-
         glfwMakeContextCurrent(windowDescriptor);
         glfwSwapInterval(1);
 
@@ -87,9 +82,9 @@ public class Window {
         glfwSetInputMode(windowDescriptor, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
-    private void resizeWindowCallback(long window, int width, int height) {
+    public void resizeWindowCallback(long window, int width, int height) {
         glViewport(0, 0, width, height);
-        this.extent = new Tuple(width, height);
+        this.extent = new Tuple<Float, Float>(Float.valueOf(width), Float.valueOf(height));
     }
 
     public Tuple<Float, Float> getExtent() {

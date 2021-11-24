@@ -32,15 +32,10 @@ public class ChunksManager {
     }
 
     public LinkedList<Chunk> getAllChunks(){
-        System.out.println("1.1.1");
         LinkedList<Chunk> toExport = new LinkedList<>();
-        System.out.println("1.1.2");
         synchronized (this.chunks){
-            System.out.println("1.1.3");
             this.chunks.forEach(toExport::addAll);
-            System.out.println("1.1.4");
         }
-        System.out.println("1.1.5");
         return toExport;
     }
 
