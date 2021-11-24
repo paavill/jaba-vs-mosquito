@@ -104,7 +104,7 @@ public class MeshRenderer {
         glUniformMatrix4fv(atrPos, false, model.get(fb));
 
         glBindVertexArray(VAO);
-        BlocksModelsInitializer.getTextureAtlas().bind();
+
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);

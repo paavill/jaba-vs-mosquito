@@ -34,6 +34,10 @@ public class Renderer {
     private int chunkShaderProgram;
     private Texture texture;
 
+    private int depthShader;
+    private ShadowMap shadowMap;
+    private Light light;
+
     public Renderer(Window window, Camera renderCamera) {
         this.window = window;
         this.capabilities = GL.createCapabilities();
@@ -42,7 +46,8 @@ public class Renderer {
         this.projection = new Matrix4f().perspective((float) Math.toRadians(77), 1024.f / 768.f, 0.1f, 1000.f);
         glEnable(GL_DEPTH_TEST);
         try {
-            this.chunkShaderProgram = GraphicResourceLoader.linkShaderProgram("VERTEX_SHADER.glsl", "FRAGMENT_SHADER.glsl", "shaders/");
+            //this.chunkShaderProgram = GraphicResourceLoader.linkShaderProgram("VERTEX_SHADER.glsl", "FRAGMENT_SHADER.glsl", "shaders/");
+            this.depthShader = GraphicResourceLoader.linkShaderProgram("shadow_depth_vs.glsl", "shadow_depth_fs.glsl", "shadow_depth_gs.glsl", "shaders/");
             //this.texture = GraphicResourceLoader.loadTexture("blocks.png", "/");
             //создание текстурного астласа должно быть здесь, но в силу плохой архитекруты
             //загрузки текстур (со стороны paavill), создание пока что не тут.
@@ -50,6 +55,9 @@ public class Renderer {
             ex.printStackTrace();
         }
         this.chunkRenderer = new MeshRenderer(this.chunkShaderProgram);
+        this.shadowMap = new ShadowMap();
+        this.shadowMap.init(window.getExtent().first.intValue(), window.getExtent().second.intValue());
+        this.light = new Light(renderCamera.getCurrentPosition());
     }
 
     public int getToDeleteBuffSize(){
@@ -153,16 +161,69 @@ public class Renderer {
     }
 
     public void render() throws IOException, InterruptedException {
+        this.light.setPosition(renderCamera.getCurrentPosition());
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
+        glClearColor(0.0f, 0.749f, 1.f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        Matrix4f shadowProj = new Matrix4f().perspective((float) (Math.PI / 2), ((float)shadowMap.getWidth())/shadowMap.getHeight(), 1.0f, 25.0f);
+        List<Matrix4f> shadowTransforms = new ArrayList<>();
+        shadowTransforms.add(shadowProj.mul(new Matrix4f().lookAt(
+                light.getPosition(),
+                light.getPosition().add(new Vector3f(1.0f, 0.0f, 0.0f)),
+                new Vector3f(0.0f, -1.0f, 0.0f))));
+
+        shadowTransforms.add(shadowProj.mul(new Matrix4f().lookAt(
+                light.getPosition(),
+                light.getPosition().add(new Vector3f(-1.0f, 0.0f, 0.0f)),
+                new Vector3f(0.0f, -1.0f, 0.0f))));
+
+        shadowTransforms.add(shadowProj.mul(new Matrix4f().lookAt(
+                light.getPosition(),
+                light.getPosition().add(new Vector3f(0.0f, 1.0f, 0.0f)),
+                new Vector3f(0.0f, 0.0f, 1.0f))));
+
+        shadowTransforms.add(shadowProj.mul(new Matrix4f().lookAt(
+                light.getPosition(),
+                light.getPosition().add(new Vector3f(0.0f, -1.0f, 0.0f)),
+                new Vector3f(0.0f, 0.0f, -1.0f))));
+
+        shadowTransforms.add(shadowProj.mul(new Matrix4f().lookAt(
+                light.getPosition(),
+                light.getPosition().add(new Vector3f(0.0f, 0.0f, -1.0f)),
+                new Vector3f(0.0f, -1.0f, 0.0f))));
+
+        shadowTransforms.add(shadowProj.mul(new Matrix4f().lookAt(
+                light.getPosition(),
+                light.getPosition().add(new Vector3f(0.0f, 0.0f, -1.0f)),
+                new Vector3f(0.0f, -1.0f, 0.0f))));
+
+        glViewport(0, 0, this.shadowMap.getWidth(), this.shadowMap.getHeight());
+        glBindFramebuffer(GL_FRAMEBUFFER, this.shadowMap.getFbo());
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glUseProgram(depthShader);
+        for (int i = 0; i < 6; ++i) {
+            atrPos = glGetUniformLocation(depthShader, "shadowMatrices[" + i + "]");
+            fb.clear();
+            glUniformMatrix4fv(atrPos, false, shadowTransforms.get(i).get(fb));
+        }
+        atrPos = glGetUniformLocation(depthShader, "far_plane");
+        glUniform1f(atrPos, 25.0f);
+        atrPos = glGetUniformLocation(depthShader, "lightPos");
+        glUniform3f(atrPos, this.light.getPosition().x, this.light.getPosition().y, this.light.getPosition().z);
+        renderScene();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glViewport(0, 0, this.window.getExtent().first.intValue(), this.window.getExtent().second.intValue());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(chunkShaderProgram);
 
-        fb.clear();
         atrPos = glGetUniformLocation(chunkShaderProgram, "view");
         glUniformMatrix4fv(atrPos, false, renderCamera.generateMatrix().get(fb));
-        Float w = Float.valueOf(this.window.getExtent().first);
-        Float h = Float.valueOf(this.window.getExtent().second);
+        Float w = this.window.getExtent().first;
+        Float h = this.window.getExtent().second;
         this.projection = new Matrix4f().perspective((float) Math.toRadians(77),
                 w / h, 0.1f, 1000.f);
         fb.clear();
@@ -170,17 +231,27 @@ public class Renderer {
         glUniformMatrix4fv(atrPos, false, projection.get(fb));
 
         atrPos = glGetUniformLocation(chunkShaderProgram, "lightPos");
-        Vector3f vec = renderCamera.getCurrentPosition();
-        glUniform3f(atrPos, vec.x, vec.y, vec.z);
+        glUniform3f(atrPos, this.light.getPosition().x, this.light.getPosition().y, this.light.getPosition().z);
 
-        this.chunkRenderer.drawAll(this.objectsToRender);
+        atrPos = glGetUniformLocation(chunkShaderProgram, "viewPos");
+        glUniform3f(atrPos, this.renderCamera.getCurrentPosition().x, this.renderCamera.getCurrentPosition().y, this.renderCamera.getCurrentPosition().z);
+
+        atrPos = glGetUniformLocation(chunkShaderProgram, "far_plane");
+        glUniform1f(atrPos, 25.0f);
+
+        glActiveTexture(GL_TEXTURE0);
+        BlocksModelsInitializer.getTextureAtlas().bind();
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, this.shadowMap.getDepthCubemap());
+        renderScene();
 
         glUseProgram(0);
-        glClearColor(0.0f, 0.749f, 1.f, 0.0f);
 
         window.swapBuffers();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
+    private void renderScene() {
+        this.chunkRenderer.drawAll(this.objectsToRender);
     }
 }
