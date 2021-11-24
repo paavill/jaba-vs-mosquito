@@ -48,7 +48,7 @@ public class Renderer {
         try {
             //this.chunkShaderProgram = GraphicResourceLoader.linkShaderProgram("VERTEX_SHADER.glsl", "FRAGMENT_SHADER.glsl", "shaders/");
             this.depthShader = GraphicResourceLoader.linkShaderProgram("shadow_depth_vs.glsl", "shadow_depth_fs.glsl", "shadow_depth_gs.glsl", "shaders/");
-            //this.texture = GraphicResourceLoader.loadTexture("blocks.png", "/");
+            this.texture = GraphicResourceLoader.loadTexture("blocks.png", "");
             //создание текстурного астласа должно быть здесь, но в силу плохой архитекруты
             //загрузки текстур (со стороны paavill), создание пока что не тут.
         } catch (Exception ex) {

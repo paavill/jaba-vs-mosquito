@@ -97,7 +97,7 @@ public class GraphicResourceLoader {
 
     private static String buildPath(String filePath, String folderPath) {
         ClassLoader loader = GraphicResourceLoader.class.getClassLoader();
-        URL url = loader.getResource(folderPath);
-        return url.getPath() + filePath;
+        URL url = loader.getResource(folderPath + filePath);
+        return url.getPath();
     }
 }
