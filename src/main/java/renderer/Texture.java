@@ -17,15 +17,16 @@ public class Texture {
 
     public Texture(int width, int height, ByteBuffer data){
         this.id = glGenTextures();
+        this.bind();
         this.width = width;
         this.height = height;
-        this.bind();
         this.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         this.setParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         this.setParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         this.setParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         this.uploadData(GL_RGB, width, height, GL_RGBA, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        this.unBind();
     }
 
     public void bind() {

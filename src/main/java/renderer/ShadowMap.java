@@ -39,6 +39,7 @@ public class ShadowMap {
         glDrawBuffers(GL_NONE);
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     }
 
     public int getWidth() {

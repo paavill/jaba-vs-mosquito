@@ -16,6 +16,6 @@ void main()
             gl_Position = shadowMatrices[face] * fragPos;
             EmitVertex();
         }
-        EmitPrimitive();
+        EndPrimitive();
     }
 }
