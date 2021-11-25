@@ -7,7 +7,7 @@ in vec3 aPos;
 in vec2 TexCoord;
 
 uniform sampler2D ourTexture;
-uniform samplerCube depthMap;
+uniform samplerCubeShadow depthMap;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -20,7 +20,7 @@ float ShadowCalculation(vec3 fragPos)
 {
     vec3 fragToLight = fragPos - lightPos;
 
-    float closestDepth = texture(depthMap, fragToLight).r;
+    float closestDepth = texture(depthMap, vec4(fragToLight, 1.0f)).r;
 
     closestDepth *= far_plane;
 
@@ -36,10 +36,10 @@ float ShadowCalculation(vec3 fragPos)
 void main()
 {
     vec3 color = texture(ourTexture, TexCoord).rgb;
-    float ambientStrength = 1.0;
+    float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * vec3(1.0f);
     vec3 norm = normalize(Normal);
-    vec3 lightColor = vec3(2.0);
+    vec3 lightColor = vec3(0.3);
 
     vec3 lightDir = normalize(lightPos - FragPos);
 
@@ -51,11 +51,10 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0)*attenuation;
     vec3 diffuse = diff * lightColor;
 
+    float shadow = ShadowCalculation(FragPos);
 
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse)) * color;
 
-    float shadow = ShadowCalculation(FragPos)*attenuation;
-
-    vec3 result = (ambient - shadow  + diffuse) * color;
 
     FragColor = vec4(result, 1.0);
 }

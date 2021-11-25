@@ -33,6 +33,7 @@ public class GraphicResourceLoader {
         int shader = glCreateShader(type);
         glShaderSource(shader, shaderSource);
         glCompileShader(shader);
+        System.out.println(glGetShaderInfoLog(shader));
         return shader;
     }
 
@@ -59,8 +60,8 @@ public class GraphicResourceLoader {
         int geometryShader = GraphicResourceLoader.compileShader(sourceGeometryShader, GL_GEOMETRY_SHADER);
         int shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
         glAttachShader(shaderProgram, geometryShader);
+        glAttachShader(shaderProgram, fragmentShader);
         glLinkProgram(shaderProgram);
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);

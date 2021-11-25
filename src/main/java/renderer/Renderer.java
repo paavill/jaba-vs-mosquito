@@ -203,13 +203,15 @@ public class Renderer {
                 new Vector3f(0.0f, -1.0f, 0.0f))));
 
 
+
+        glViewport(0, 0, this.shadowMap.getWidth(), this.shadowMap.getHeight());
         glBindFramebuffer(GL_FRAMEBUFFER, this.shadowMap.getFbo());
-        //glViewport(0, 0, this.shadowMap.getWidth(), this.shadowMap.getHeight());
-        glViewport(0, 0, this.window.getExtent().first.intValue(), this.window.getExtent().second.intValue());
+        //glViewport(0, 0, this.window.getExtent().first.intValue(), this.window.getExtent().second.intValue());
         glClear(GL_DEPTH_BUFFER_BIT);
         glUseProgram(depthShader);
+        this.chunkRenderer.setShaderProgram(depthShader);
         for (int i = 0; i < 6; ++i) {
-            atrPos = glGetUniformLocation(depthShader, "shadowMatrices[" + i + "]");
+            atrPos = glGetUniformLocation(depthShader, "shadowMatrices[" +  i + "]");
             fb.clear();
             glUniformMatrix4fv(atrPos, false, shadowTransforms.get(i).get(fb));
         }
@@ -220,12 +222,13 @@ public class Renderer {
 
         renderScene();
 
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
+        this.chunkRenderer.setShaderProgram(0);
 
         glUseProgram(chunkShaderProgram);
-
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        this.chunkRenderer.setShaderProgram(chunkShaderProgram);
         atrPos = glGetUniformLocation(chunkShaderProgram, "view");
         glUniformMatrix4fv(atrPos, false, renderCamera.generateMatrix().get(fb));
         Float w = this.window.getExtent().first;
@@ -245,15 +248,22 @@ public class Renderer {
         atrPos = glGetUniformLocation(chunkShaderProgram, "far_plane");
         glUniform1f(atrPos, 25.0f);
 
-        glBindTexture(GL_TEXTURE_CUBE_MAP, this.shadowMap.getDepthCubemap());
 
+        glUniform1i(glGetUniformLocation(chunkShaderProgram, "ourTexture"), 0);
+        int i = glGetUniformLocation(chunkShaderProgram, "depthMap");
+        glUniform1i(i, 1);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, this.shadowMap.getDepthCubemap());
+        glActiveTexture(GL_TEXTURE0);
         this.texture.bind();
 
         renderScene();
 
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        this.texture.unBind();
+        //glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        //this.texture.unBind();
         glUseProgram(0);
+        this.chunkRenderer.setShaderProgram(0);
 
         window.swapBuffers();
     }
