@@ -3,27 +3,28 @@ package main;
 import game_objects.Player;
 import input.KeyBindings;
 import org.joml.Vector3f;
+import physics.PhysicsEngine;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.*;
 
 public class World {
 
     private Player player;
+    private PhysicsEngine engine;
     private ChunksManager chunksManager = new ChunksManager(10);
 
-
     public World(Camera main, KeyBindings bindings) {
-
         try {
             this.chunksManager.generateChunks();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+        engine = new PhysicsEngine();
+
         this.player = new Player(main, bindings);
-        this.player.move(new Vector3f(0, 100,0));
+        this.player.teleport(new Vector3f(0, 100,0));
     }
 
     public LinkedList<Chunk> getToDelete(){
@@ -35,7 +36,7 @@ public class World {
     }
 
     public void updateEntity(){
-        player.update();
+        player.update(engine);
         chunksManager.setPlayerPosition(player.getPosition());
     }
 
