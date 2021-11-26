@@ -70,7 +70,11 @@ public class ChunksManager {
     public Chunk getChunkByGlobalCoords(float x, float z){
         int leftChunkCalcPos = (int)this.playerPosition.x/CHUNK_SIZE_X - this.renderDistance/2;
         int farChunkCalcPos = (int)this.playerPosition.z/CHUNK_SIZE_Z - this.renderDistance/2;
-        return chunks.get((int)x/CHUNK_SIZE_X - leftChunkCalcPos).get((int)z/CHUNK_SIZE_Z - farChunkCalcPos);
+        Chunk chunk = null;
+        if((int)x/CHUNK_SIZE_X - leftChunkCalcPos < chunks.size() && (int)z/CHUNK_SIZE_Z - farChunkCalcPos < this.chunks.getLast().size()){
+            chunk = chunks.get((int)x/CHUNK_SIZE_X - leftChunkCalcPos).get((int)z/CHUNK_SIZE_Z - farChunkCalcPos);
+        }
+        return chunk;
     }
 
     //первая прогрузка мира
@@ -583,6 +587,63 @@ public class ChunksManager {
         synchronized (this.toGenerate) {
             return this.toGenerate;
         }
+    }
+
+    public LinkedList<LinkedList<LinkedList<BlockType>>> getToCollisionAreaByGlobalCoords(Vector3f position, Integer size){
+        LinkedList<LinkedList<LinkedList<BlockType>>> result = new LinkedList<>();
+
+        float xpos = 0;
+        float zpos = 0;
+        if(position.x < 0){
+            xpos = position.x - CHUNK_SIZE_X;
+        } else {
+            xpos = position.x;
+        }
+        if(position.z < 0){
+            zpos = position.z - CHUNK_SIZE_Z;
+        } else {
+            zpos = position.z;
+        }
+
+        Chunk left = this.getChunkByGlobalCoords(xpos - CHUNK_SIZE_X, zpos);
+        Chunk right = this.getChunkByGlobalCoords(xpos + CHUNK_SIZE_X, zpos);
+        Chunk far = this.getChunkByGlobalCoords(xpos, zpos - CHUNK_SIZE_Z);
+        Chunk leftFar = this.getChunkByGlobalCoords(xpos - CHUNK_SIZE_X, zpos - CHUNK_SIZE_Z);
+        Chunk rightFar = this.getChunkByGlobalCoords(xpos + CHUNK_SIZE_X, zpos - CHUNK_SIZE_Z);
+        Chunk near = this.getChunkByGlobalCoords(xpos, zpos + CHUNK_SIZE_Z);
+        Chunk leftNear = this.getChunkByGlobalCoords(xpos - CHUNK_SIZE_X, zpos + CHUNK_SIZE_Z);
+        Chunk rightNear = this.getChunkByGlobalCoords(xpos + CHUNK_SIZE_X, zpos + CHUNK_SIZE_Z);
+        Chunk center = this.getChunkByGlobalCoords(xpos, zpos);
+        BlockType [][][] centerBlocks = center.getBlocks();
+        BlockType [][][] leftBlocks = left.getBlocks();
+        BlockType [][][] rightBlocks = right.getBlocks();
+        BlockType [][][] rightFarBlocks = rightFar.getBlocks();
+        BlockType [][][] leftFarBlocks = leftFar.getBlocks();
+        BlockType [][][] rightNearBlocks = rightNear.getBlocks();
+        BlockType [][][] leftNearBlocks = leftNear.getBlocks();
+        BlockType [][][] farBlocks = far.getBlocks();
+        BlockType [][][] nearBlocks = near.getBlocks();
+        Vector3f localCoords = new Vector3f(position).sub(center.getPosition());
+        int startX = size/2;
+        int startY = size/2;
+        int startZ = size/2;
+        for(int x = -startX; x < size/2; x ++){
+            result.add(new LinkedList<>());
+            for(int y = -startY; y < size/2; y ++){
+                result.get(x + size/2).add(new LinkedList<>());
+                for(int z = -startZ; z < size/2; z ++){
+                    int x_block_pos = (int)localCoords.x%CHUNK_SIZE_X + x;
+                    int y_block_pos = (int)localCoords.y%CHUNK_SIZE_Y + y;
+                    int z_block_pos = (int)localCoords.z%CHUNK_SIZE_Z + z;
+
+                    if(x_block_pos < 0 && y_block_pos > 0 && z_block_pos > 0){
+                        result.get(x + size/2).get(y + size/2).add(leftBlocks[CHUNK_SIZE_X - 1 + z_block_pos][y_block_pos][z_block_pos]);
+                    }
+
+                }
+            }
+        }
+        return result;
     }
 
     public void setPlayerPosition(Vector3f playerPosition) {

@@ -1,5 +1,6 @@
 package main;
 
+import game_objects.blocks.BlockType;
 import input.InputManager;
 import input.KeyBindings;
 import org.joml.Vector3f;
@@ -108,6 +109,17 @@ public class Game {
             renderer.render();
 
             window.update(bindings);
+            LinkedList<LinkedList<LinkedList<BlockType>>> types = world.getChunksManager().getToCollisionAreaByGlobalCoords(new Vector3f(this.world.getPlayer().getMainCamera().getCurrentPosition()), 4);
+            System.out.println("------------------------------------");
+            if(types.size() > 0) {
+                for (int y = 0; y < types.get(0).size(); y++) {
+                    System.out.println();
+                    for (int z = 0; z < types.get(0).get(0).size(); z++) {
+                        System.out.print(types.get(0).get(y).get(z).toString() + " ");
+                    }
+                    System.out.println();
+                }
+            }
             end = GLFW.glfwGetTime();
 
             delta = (end - start)*1000;
