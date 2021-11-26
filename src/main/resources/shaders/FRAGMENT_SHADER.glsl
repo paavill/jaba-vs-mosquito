@@ -7,7 +7,7 @@ in vec3 aPos;
 in vec2 TexCoord;
 
 uniform sampler2D ourTexture;
-uniform samplerCubeShadow depthMap;
+uniform samplerCube depthMap;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
@@ -20,7 +20,7 @@ float ShadowCalculation(vec3 fragPos)
 {
     vec3 fragToLight = fragPos - lightPos;
 
-    float closestDepth = texture(depthMap, vec4(fragToLight, 1.0f));
+    float closestDepth = texture(depthMap, fragToLight).r;
 
     closestDepth *= far_plane;
 

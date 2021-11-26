@@ -163,7 +163,7 @@ public class Renderer {
     }
 
     public void render() throws IOException, InterruptedException {
-        this.light.setPosition(new Vector3f(5.f,80.f,-3.f));
+        this.light.setPosition(new Vector3f(this.renderCamera.getCurrentPosition()).add(new Vector3f(this.renderCamera.getCurrentFront()).normalize().mul(10.f)));
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 

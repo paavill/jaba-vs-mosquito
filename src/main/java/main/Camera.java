@@ -56,6 +56,14 @@ public class Camera {
                 VERTICAL_CAMERA_VECTOR);
     }
 
+    public Vector3f getCurrentViewPoint() {
+        return currentViewPoint;
+    }
+
+    public Vector3f getCurrentFront() {
+        return currentFront;
+    }
+
     public Vector3f getCurrentPosition(){
         return this.currentPosition;
     }
