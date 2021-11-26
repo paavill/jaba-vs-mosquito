@@ -109,17 +109,20 @@ public class Game {
             renderer.render();
 
             window.update(bindings);
-            LinkedList<LinkedList<LinkedList<BlockType>>> types = world.getChunksManager().getToCollisionAreaByGlobalCoords(new Vector3f(this.world.getPlayer().getMainCamera().getCurrentPosition()), 4);
-            System.out.println("------------------------------------");
-            if(types.size() > 0) {
-                for (int y = 0; y < types.get(0).size(); y++) {
-                    System.out.println();
-                    for (int z = 0; z < types.get(0).get(0).size(); z++) {
-                        System.out.print(types.get(0).get(y).get(z).toString() + " ");
+            LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> types = world.getChunksManager().getToCollisionAreaByGlobalCoords(new Vector3f(this.world.getPlayer().getMainCamera().getCurrentPosition()), 8);
+            System.out.println("new cube------------------------------------");
+            for(int x = types.size() - 1; x > 0; x--){
+                System.out.println("x:" + x);
+                for (int y = types.get(0).size() - 1; y >= 0; y--) {
+                    //System.out.println();
+                    for (int z = types.get(0).get(0).size() - 1; z >= 0; z--) {
+                        System.out.print(types.get(x).get(y).get(z).toString() + " ");
                     }
                     System.out.println();
                 }
+                System.out.println("\nend x:" + x);
             }
+            System.out.println("new cube end------------------------------------");
             end = GLFW.glfwGetTime();
 
             delta = (end - start)*1000;
