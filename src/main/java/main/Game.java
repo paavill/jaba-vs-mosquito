@@ -132,7 +132,7 @@ public class Game {
 
             double sh = GLFW.glfwGetTime() - start;
             this.realFps = Math.min(1000/(sh*1000), this.realFps);
-            glfwSetWindowTitle(window.getWindowDescriptor(),"JabaCraft fps:" + String.valueOf(1000/(sh*1000)) + " delta: " + String.valueOf(delta));
+            glfwSetWindowTitle(window.getWindowDescriptor(),"JabaCraft fps:" + String.valueOf(1000/(sh*1000)) + " delta: " + String.valueOf(delta) + " player pos: " + world.getPlayer().getPosition());
             //System.out.print(this.realFps);
             //System.out.print("   ");
             //System.out.println(1000/(sh*1000));

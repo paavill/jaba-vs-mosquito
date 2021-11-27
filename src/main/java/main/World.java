@@ -24,7 +24,7 @@ public class World {
         engine = new PhysicsEngine();
 
         this.player = new Player(main, bindings);
-        this.player.teleport(new Vector3f(0, 100,0));
+        this.player.teleport(new Vector3f(-1, 100,-1));
     }
 
     public LinkedList<Chunk> getToDelete(){
@@ -36,7 +36,7 @@ public class World {
     }
 
     public void updateEntity(){
-        player.update(engine);
+        player.update(engine, chunksManager.getToCollisionAreaByGlobalCoords(player.getPosition(), 4));
         chunksManager.setPlayerPosition(player.getPosition());
     }
 
