@@ -123,6 +123,7 @@ public class Game {
                 System.out.println("\nend x:" + x);
             }
             System.out.println("new cube end------------------------------------");
+            System.out.println("PLAYER POSITION: " + world.getPlayer().getMainCamera().getCurrentPosition().toString());
             end = GLFW.glfwGetTime();
 
             delta = (end - start)*1000;
