@@ -2,7 +2,7 @@ package main;
 
 public class Tuple<T1, T2> {
     public final T1 first;
-    public final T2 second;
+    public T2 second;
 
     public Tuple(T1 x, T2 y) {
         this.first = x;

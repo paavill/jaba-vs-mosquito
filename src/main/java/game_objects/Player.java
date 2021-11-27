@@ -43,6 +43,7 @@ public class Player extends Entity implements IRenderable, PhysicalObject {
         rigidbody.setVelocityWithoutGravity(dir.x, dir.z);
         if (bindings.getState(Controls.Up) && rigidbody.isOnGround()) {
             rigidbody.addForce(new Vector3f(0f, 0.1f, 0f));
+            rigidbody.setOnGround(false);
         }
         this.setPosition(physics.tryMoveRigidbody(rigidbody, blocks));
         mainCamera.setCurrentPosition(new Vector3f(rigidbody.getCollider().getPosition()).add(new Vector3f(0f, 0.75f, 0f)));

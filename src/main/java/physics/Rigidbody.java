@@ -7,9 +7,12 @@ public class Rigidbody {
     private Collision collider;
     private Vector3f velocity;
 
+    private Boolean isGrounded;
+
     public Rigidbody(Vector3f position, Vector3f extend) {
         collider = new Collision(position, extend);
         velocity = new Vector3f(0, 0, 0);
+        isGrounded = false;
     }
 
     public Collision getCollider() {
@@ -37,7 +40,11 @@ public class Rigidbody {
     }
 
     public boolean isOnGround() {
-        return (velocity.y > -0.000001f) && (velocity.y < 0.000001f);
+        return this.isGrounded;
+    }
+
+    public void setOnGround(boolean isGrounded) {
+        this.isGrounded = isGrounded;
     }
 
     public void addForce(Vector3f force) {

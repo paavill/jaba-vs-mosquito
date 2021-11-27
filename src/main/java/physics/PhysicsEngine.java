@@ -5,7 +5,9 @@ import main.Tuple;
 import org.joml.Vector3f;
 import org.lwjgl.system.CallbackI;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class PhysicsEngine {
 
@@ -17,11 +19,18 @@ public class PhysicsEngine {
 
     public Vector3f tryMoveRigidbody(Rigidbody object, LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks) {
         useGravity(object, blocks);
-        Tuple<Collision, Boolean> res = checkCollision(blocks, object, false);
+        Tuple<List<Collision>, Boolean> res = checkCollision(blocks, object, false);
         if (res.second) {
             //object.getCollider().clipToCollider(res.first, new Vector3f(object.getVelocity().x, 0f, 0f).normalize());
-            //object.getCollider().clipToCollider(res.first, new Vector3f(0f, 0f, object.getVelocity().z).normalize());
-            object.setVelocity(new Vector3f(0f, object.getVelocity().y, 0f));
+            res.first.forEach(block -> {
+                float distance = object.getCollider().getCenter().distance(block.getCenter());
+                double distX = object.getCollider().getExtend().x / 2.0 + block.getExtend().x / 2.0 + 0.25;
+                double distZ = object.getCollider().getExtend().z / 2.0 + block.getExtend().z / 2.0 + 0.25;
+                if (distance < distX && distance < distZ) {
+                    object.setVelocity(new Vector3f(0f, object.getVelocity().y, 0f));
+                }
+            });
+
         }
 
         object.update();
@@ -30,17 +39,23 @@ public class PhysicsEngine {
 
 
     private void useGravity(Rigidbody object,  LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks) {
-        Tuple<Collision, Boolean> res = checkCollision(blocks, object, true);
+        Tuple<List<Collision>, Boolean> res = checkCollision(blocks, object, true);
         if (res.second) {
             //object.getCollider().clipToCollider(res.first, new Vector3f(0f, object.getVelocity().y, 0f).normalize());
-            object.setVelocity(new Vector3f(object.getVelocity().x, 0, object.getVelocity().z));
+            res.first.forEach(block -> {
+                //Тут фиксить
+                if (block.getPosition().y < object.getCollider().getPosition().y) {
+                    object.setOnGround(true);
+                    object.setVelocity(new Vector3f(object.getVelocity().x, 0, object.getVelocity().z));
+                }
+            });
         } else {
             object.getVelocity().add(gravity);
         }
     }
 
-    private Tuple<Collision, Boolean> checkCollision(LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks, Rigidbody rigidbody, boolean isGravity) {
-        Tuple<Collision, Boolean> res = new Tuple<>(null, false);
+    private Tuple<List<Collision>, Boolean> checkCollision(LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks, Rigidbody rigidbody, boolean isGravity) {
+        Tuple<List<Collision>, Boolean> res = new Tuple<List<Collision>, Boolean>(new ArrayList<Collision>(), false);
 
         for (LinkedList<LinkedList<Tuple<Vector3f, BlockType>>> i : blocks) {
             for (LinkedList<Tuple<Vector3f, BlockType>> j : i) {
@@ -51,12 +66,14 @@ public class PhysicsEngine {
                         if (isGravity) {
                             body.move(new Vector3f(0.f, rigidbody.getVelocity().y, 0.f));
                             if (body.isCollideWith(col)) {
-                                return new Tuple<>(col, true);
+                                res.second = true;
+                                res.first.add(col);
                             }
                         } else {
                             body.move(new Vector3f(rigidbody.getVelocity().x, 0.f, rigidbody.getVelocity().z));
                             if (body.isCollideWith(col)) {
-                                return new Tuple<>(col, true);
+                                res.second = true;
+                                res.first.add(col);
                             }
                         }
                     }
