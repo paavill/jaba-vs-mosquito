@@ -100,38 +100,44 @@ public class Camera {
         this.currentViewPoint = new Vector3f(this.currentPosition).add(this.currentFront);
     }
 
-    public void move(KeyBindings bindings) {
+    public Vector3f getDirectionByInput(KeyBindings bindings) {
+        Vector3f dir = new Vector3f();
         if (bindings.getState(Controls.Forward)) {
-            this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).normalize().mul(this.cameraMoveSpeed));
+            dir.add(new Vector3f(this.currentViewPoint).sub(this.currentPosition).normalize().mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Back)) {
-            this.moveByVector(new Vector3f(this.currentViewPoint).sub(this.currentPosition).normalize().mul(this.cameraMoveSpeed).mul(-1));
+            dir.add(new Vector3f(this.currentViewPoint).sub(this.currentPosition).normalize().mul(this.cameraMoveSpeed).mul(-1));
         }
         if (bindings.getState(Controls.Left)) {
             Quaternionf q = new Quaternionf();
             q.rotateAxis((float) Math.toRadians(90), 0, 1, 0);
             Vector3f vec = new Vector3f(this.currentViewPoint).sub(this.currentPosition);
             vec.y = 0;
-            this.moveByVector(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
+            dir.add(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Right)) {
             Quaternionf q = new Quaternionf();
             q.rotateAxis((float) Math.toRadians(-90), 0, 1, 0);
             Vector3f vec = new Vector3f(this.currentViewPoint).sub(this.currentPosition);
             vec.y = 0;
-            this.moveByVector(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
+            dir.add(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Down)) {
-            this.moveByVector(new Vector3f(0.f, -1.f, 0.f).mul(this.cameraMoveSpeed));
+            //this.moveByVector(new Vector3f(0.f, -1.f, 0.f).mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Up)) {
-            this.moveByVector(new Vector3f(0.f, 1.f, 0.f).mul(this.cameraMoveSpeed));
+            //this.moveByVector(new Vector3f(0.f, 1.f, 0.f).mul(this.cameraMoveSpeed));
         }
+        return dir;
     }
 
     public void moveByVector(Vector3f movementVector) {
         this.currentPosition.add(movementVector);
         this.currentViewPoint.add(movementVector);
+    }
+
+    public void setCurrentPosition(Vector3f currentPosition) {
+        this.currentPosition = currentPosition;
     }
 
     public void setCameraMoveSpeed(float newSpeed){
