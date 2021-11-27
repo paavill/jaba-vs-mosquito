@@ -57,7 +57,7 @@ public class Game {
         window = new Window("JabaCraft", 1024, 768);
         Tuple<Float, Float> center = new Tuple<Float, Float>(window.getExtent().first / 2,  window.getExtent().second / 2);
         camera = new Camera(
-                new Vector3f(0f, 0f, 0f),
+                new Vector3f(-1f, 0f, -1f),
                 center,
                 -90.0f, -40.0f, 0.05f, 0.3f);
         renderer = new Renderer(window, camera);
@@ -109,7 +109,7 @@ public class Game {
             renderer.render();
 
             window.update(bindings);
-            LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> types = world.getChunksManager().getToCollisionAreaByGlobalCoords(new Vector3f(this.world.getPlayer().getMainCamera().getCurrentPosition()), 8);
+            LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> types = world.getChunksManager().getToCollisionAreaByGlobalCoords(new Vector3f(this.world.getPlayer().getMainCamera().getCurrentPosition()), 2);
             System.out.println("new cube------------------------------------");
             for(int x = types.size() - 1; x > 0; x--){
                 System.out.println("x:" + x);

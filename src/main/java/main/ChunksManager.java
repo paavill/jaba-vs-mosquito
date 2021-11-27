@@ -589,20 +589,20 @@ public class ChunksManager {
         }
     }
 
-    public LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> getToCollisionAreaByGlobalCoords(Vector3f position, Integer size){
+    public LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> getToCollisionAreaByGlobalCoords(Vector3f positionPlayer, Integer size){
         LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> result = new LinkedList<>();
 
         float xpos = 0;
         float zpos = 0;
-        if(position.x < 0){
-            xpos = position.x - CHUNK_SIZE_X;
+        if(positionPlayer.x < 0){
+            xpos = positionPlayer.x - CHUNK_SIZE_X;
         } else {
-            xpos = position.x;
+            xpos = positionPlayer.x;
         }
-        if(position.z < 0){
-            zpos = position.z - CHUNK_SIZE_Z;
+        if(positionPlayer.z < 0){
+            zpos = positionPlayer.z - CHUNK_SIZE_Z;
         } else {
-            zpos = position.z;
+            zpos = positionPlayer.z;
         }
 
         Chunk left = this.getChunkByGlobalCoords(xpos - CHUNK_SIZE_X, zpos);
@@ -623,7 +623,7 @@ public class ChunksManager {
         BlockType [][][] leftNearBlocks = leftNear.getBlocks();
         BlockType [][][] farBlocks = far.getBlocks();
         BlockType [][][] nearBlocks = near.getBlocks();
-        Vector3f localCoords = new Vector3f(position).sub(center.getPosition());
+        Vector3f localCoords = new Vector3f(positionPlayer).sub(center.getPosition());
         int startX = size/2;
         int startY = size/2;
         int startZ = size/2;
@@ -638,7 +638,8 @@ public class ChunksManager {
 
                     if(x_block_pos >= 0 && y_block_pos >= 0 && z_block_pos >= 0 &&
                             x_block_pos < CHUNK_SIZE_X && z_block_pos < CHUNK_SIZE_Z){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = centerBlocks[x_block_pos][y_block_pos][z_block_pos];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
@@ -646,14 +647,16 @@ public class ChunksManager {
 
                     if(x_block_pos < 0 && y_block_pos >= 0 && z_block_pos >= 0 &&
                         z_block_pos < CHUNK_SIZE_Z){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = leftBlocks[CHUNK_SIZE_X - 1 + x_block_pos][y_block_pos][z_block_pos];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
                     }
 
                     if(x_block_pos < 0 && y_block_pos >= 0 && z_block_pos < 0){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = leftFarBlocks[CHUNK_SIZE_X - 1 + x_block_pos][y_block_pos][CHUNK_SIZE_Z - 1 + z_block_pos];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
@@ -661,14 +664,16 @@ public class ChunksManager {
 
                     if(x_block_pos >= 0 && y_block_pos >= 0 && z_block_pos < 0 &&
                             x_block_pos < CHUNK_SIZE_X){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = farBlocks[x_block_pos][y_block_pos][CHUNK_SIZE_Z - 1 + z_block_pos];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
                     }
 
                     if(x_block_pos >= CHUNK_SIZE_X && y_block_pos >= 0 && z_block_pos < 0){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = rightFarBlocks[x_block_pos - CHUNK_SIZE_X][y_block_pos][CHUNK_SIZE_Z - 1 + z_block_pos];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
@@ -676,14 +681,16 @@ public class ChunksManager {
 
                     if(x_block_pos >= CHUNK_SIZE_X && y_block_pos >= 0 && z_block_pos >=0 &&
                             z_block_pos < CHUNK_SIZE_Z){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = rightBlocks[x_block_pos - CHUNK_SIZE_X][y_block_pos][z_block_pos];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
                     }
 
                     if (x_block_pos >= CHUNK_SIZE_X && y_block_pos >= 0 && z_block_pos >= CHUNK_SIZE_Z) {
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = rightNearBlocks[x_block_pos - CHUNK_SIZE_X][y_block_pos][z_block_pos - CHUNK_SIZE_Z];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
@@ -691,14 +698,16 @@ public class ChunksManager {
 
                     if(x_block_pos >= 0 && y_block_pos >= 0 && z_block_pos >= CHUNK_SIZE_Z &&
                             x_block_pos < CHUNK_SIZE_X){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = nearBlocks[x_block_pos][y_block_pos][z_block_pos - CHUNK_SIZE_Z];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
                     }
 
                     if (x_block_pos < 0 && y_block_pos >= 0 && z_block_pos >= CHUNK_SIZE_Z){
-                        Vector3f blockPosition = new Vector3f(center.getPosition().x + x, y_block_pos, center.getPosition().z + z);
+                        Vector3f position = new Vector3f(positionPlayer);
+                        Vector3f blockPosition = new Vector3f((int)position.x + x, y_block_pos, (int)position.z + z);
                         BlockType blockType = leftNearBlocks[CHUNK_SIZE_X - 1 + x_block_pos][y_block_pos][z_block_pos - CHUNK_SIZE_Z];
                         Tuple<Vector3f, BlockType> block = new Tuple<>(blockPosition, blockType);
                         result.get(x + size/2).get(y + size/2).add(block);
