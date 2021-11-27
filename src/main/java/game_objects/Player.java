@@ -21,14 +21,25 @@ public class Player extends Entity implements IRenderable, PhysicalObject {
     private final KeyBindings bindings;
     private final Rigidbody rigidbody;
 
+    private boolean isCreative;
+
     public Player(Camera mainCamera, KeyBindings bindings) {
         this.mainCamera = mainCamera;
         this.bindings = bindings;
         this.setPosition(mainCamera.getCurrentPosition());
         this.rigidbody = new Rigidbody(mainCamera.getCurrentPosition(), new Vector3f(1f, 2f, 1f));
+        this.isCreative = false;
     }
 
     public void update(PhysicsEngine physics, LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks) {
+        if (bindings.getState(Controls.R)) {
+            this.isCreative = !this.isCreative;
+            if (isCreative) {
+                mainCamera.setCameraMoveSpeed(0.03f);
+            } else {
+                mainCamera.setCameraMoveSpeed(0.005f);
+            }
+        }
         updatePosition(physics, blocks);
         updateRotation();
     }
@@ -40,12 +51,18 @@ public class Player extends Entity implements IRenderable, PhysicalObject {
 
     private void updatePosition(PhysicsEngine physics, LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks) {
         Vector3f dir = mainCamera.getDirectionByInput(bindings);
-        rigidbody.setVelocityWithoutGravity(dir.x, dir.z);
-        if (bindings.getState(Controls.Up) && rigidbody.isOnGround()) {
-            rigidbody.addForce(new Vector3f(0f, 0.1f, 0f));
-            rigidbody.setOnGround(false);
+        if (!isCreative) {
+            rigidbody.setVelocityWithoutGravity(dir.x, dir.z);
+            if (bindings.getState(Controls.Up) && rigidbody.isOnGround()) {
+                rigidbody.addForce(new Vector3f(0f, 0.1f, 0f));
+                rigidbody.setOnGround(false);
+            }
+            this.setPosition(physics.tryMoveRigidbody(rigidbody, blocks));
+
+        } else {
+            Vector3f upDown = dir.add(mainCamera.getUpDownDirectionByInput(bindings));
+            rigidbody.teleport(new Vector3f(rigidbody.getCollider().getPosition().add(upDown)));
         }
-        this.setPosition(physics.tryMoveRigidbody(rigidbody, blocks));
         mainCamera.setCurrentPosition(new Vector3f(rigidbody.getCollider().getPosition()).add(new Vector3f(0f, 0.75f, 0f)));
     }
 

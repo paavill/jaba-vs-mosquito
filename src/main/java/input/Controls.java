@@ -8,6 +8,7 @@ public enum Controls {
     Up,
     Down,
 
+    R,
     SwitchCursor,
     CloseWindow
 }

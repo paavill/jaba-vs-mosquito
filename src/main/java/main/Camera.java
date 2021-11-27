@@ -24,7 +24,7 @@ public class Camera {
 
     private float cameraMoveSpeed = 0;
     private float cameraViewPointSpeed = 0;
-    private final float defaultCameraMoveSpeed;
+    private float defaultCameraMoveSpeed;
 
     public Camera() {
         this.yaw = -90;
@@ -122,11 +122,16 @@ public class Camera {
             vec.y = 0;
             dir.add(vec.rotate(q).normalize().mul(this.cameraMoveSpeed));
         }
+        return dir;
+    }
+
+    public Vector3f getUpDownDirectionByInput(KeyBindings bindings) {
+        Vector3f dir = new Vector3f();
         if (bindings.getState(Controls.Down)) {
-            //this.moveByVector(new Vector3f(0.f, -1.f, 0.f).mul(this.cameraMoveSpeed));
+            dir.add(new Vector3f(0.f, -1.f, 0.f).mul(this.cameraMoveSpeed));
         }
         if (bindings.getState(Controls.Up)) {
-            //this.moveByVector(new Vector3f(0.f, 1.f, 0.f).mul(this.cameraMoveSpeed));
+            dir.add(new Vector3f(0.f, 1.f, 0.f).mul(this.cameraMoveSpeed));
         }
         return dir;
     }
@@ -141,7 +146,7 @@ public class Camera {
     }
 
     public void setCameraMoveSpeed(float newSpeed){
-        this.cameraMoveSpeed = newSpeed;
+        this.defaultCameraMoveSpeed = newSpeed;
     }
 
     public void setCameraMoveSpeedPercentOfDefault(float percent){
