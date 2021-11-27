@@ -1,6 +1,7 @@
 package game_objects;
 
 import game_objects.blocks.BlockType;
+import input.Controls;
 import input.KeyBindings;
 import physics.PhysicalObject;
 import physics.PhysicsEngine;
@@ -40,6 +41,9 @@ public class Player extends Entity implements IRenderable, PhysicalObject {
     private void updatePosition(PhysicsEngine physics, LinkedList<LinkedList<LinkedList<Tuple<Vector3f, BlockType>>>> blocks) {
         Vector3f dir = mainCamera.getDirectionByInput(bindings);
         rigidbody.setVelocityWithoutGravity(dir.x, dir.z);
+        if (bindings.getState(Controls.Up) && rigidbody.isOnGround()) {
+            rigidbody.addForce(new Vector3f(0f, 0.1f, 0f));
+        }
         this.setPosition(physics.tryMoveRigidbody(rigidbody, blocks));
         mainCamera.setCurrentPosition(new Vector3f(rigidbody.getCollider().getPosition()).add(new Vector3f(0f, 0.75f, 0f)));
     }

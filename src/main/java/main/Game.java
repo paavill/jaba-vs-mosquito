@@ -59,7 +59,7 @@ public class Game {
         camera = new Camera(
                 new Vector3f(-1f, 0f, -1f),
                 center,
-                -90.0f, -40.0f, 0.05f, 0.3f);
+                -90.0f, -40.0f, 0.005f, 0.3f);
         renderer = new Renderer(window, camera);
         inputManager = new InputManager(window);
         bindings = new KeyBindings(inputManager);

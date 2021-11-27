@@ -35,4 +35,12 @@ public class Rigidbody {
     public void teleport(Vector3f point) {
         this.collider.teleport(point);
     }
+
+    public boolean isOnGround() {
+        return (velocity.y > -0.000001f) && (velocity.y < 0.000001f);
+    }
+
+    public void addForce(Vector3f force) {
+        velocity.add(force);
+    }
 }
