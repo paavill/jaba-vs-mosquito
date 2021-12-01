@@ -62,6 +62,7 @@ public class Player extends Entity implements IRenderable, PhysicalObject {
         } else {
             Vector3f upDown = dir.add(mainCamera.getUpDownDirectionByInput(bindings));
             rigidbody.teleport(new Vector3f(rigidbody.getCollider().getPosition().add(upDown)));
+            this.setPosition(new Vector3f(rigidbody.getCollider().getPosition()));
         }
         mainCamera.setCurrentPosition(new Vector3f(rigidbody.getCollider().getPosition()).add(new Vector3f(0f, 0.75f, 0f)));
     }

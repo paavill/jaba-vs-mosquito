@@ -1,5 +1,6 @@
 package renderer;
 
+import game_objects.blocks.BlockType;
 import main.*;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -164,6 +165,7 @@ public class Renderer {
 
     public void render() throws IOException, InterruptedException {
         this.light.setPosition(new Vector3f(this.renderCamera.getCurrentPosition()).add(new Vector3f(this.renderCamera.getCurrentFront()).normalize().mul(10.f)));
+        //this.light.setPosition(new Vector3f(3, 78, -3));
         FloatBuffer fb = BufferUtils.createFloatBuffer(16);
         int atrPos;
 
