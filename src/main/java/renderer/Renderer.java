@@ -1,6 +1,5 @@
 package renderer;
 
-import game_objects.blocks.BlockType;
 import main.*;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -13,7 +12,6 @@ import java.io.*;
 import java.nio.*;
 import java.util.*;
 
-import static org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowSizeCallback;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL33.*;
@@ -113,14 +111,9 @@ public class Renderer {
             start = GLFW.glfwGetTime();
             Chunk chunk = toUpdateBuff.getFirst();
             Tuple<Integer, Integer[]> newVao;
-            //коммон парт не может быть удалена, тупая идея! может и умная, но все ломается
+
             if (this.objectsToRender.get(chunk) != null) {
                 this.toDeleteBuff.add(chunk);
-                //Tuple<Integer, Integer[]> toUpdateVao = this.objectsToRender.get(chunk);
-                //this.chunkRenderer.deleteVAO(toUpdateVao);
-                //newVao = this.chunkRenderer.getVAO(chunk);
-                //this.objectsToRender.replace(chunk, newVao);
-                //this.toUpdateBuff.remove(chunk);
             } else {
                 newVao = this.chunkRenderer.getVAO(chunk);
                 objectsToRender.put(chunk, newVao);
@@ -134,9 +127,8 @@ public class Renderer {
         }
     }
 
-    public void deleteExtraObjectsToDraw(World world){
+    public void deleteExtraObjectsFromDraw(World world){
         int count = world.getChunksManager().getRenderDistance();
-        int toGenSize = world.getChunksManager().getToGenerate().size();
         count *= count;
         LinkedList<Chunk> chunks =  world.getChunksManager().getAllChunks();
         for (Chunk e:this.objectsToRender.keySet()) {
@@ -144,7 +136,7 @@ public class Renderer {
                 this.toDeleteBuff.add(e);
             }
         }
-        while (this.objectsToRender.size() > count && this.toDeleteBuff.size() > 0 /*&& toGenSize == 0 && this.toUpdateBuff.size() == 0*/){
+        while (this.objectsToRender.size() > count && this.toDeleteBuff.size() > 0){
             Chunk chunk = this.toDeleteBuff.getFirst();
 
             synchronized (chunk) {
@@ -159,7 +151,6 @@ public class Renderer {
                 }
                 toDeleteBuff.remove(chunk);
             }
-            toGenSize = world.getChunksManager().getToGenerate().size();
         }
     }
 
@@ -266,6 +257,10 @@ public class Renderer {
         this.chunkRenderer.setShaderProgram(0);
 
         window.swapBuffers();
+    }
+
+    public void setCapabilities(){
+        GL.setCapabilities(this.capabilities);
     }
 
     private void renderScene() {
